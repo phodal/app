@@ -1,4 +1,4 @@
-angular.module('starter', ['ionic', 'ngCordova',  'starter.controllers', 'starter.services'])
+angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controllers', 'starter.services'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -15,6 +15,16 @@ angular.module('starter', ['ionic', 'ngCordova',  'starter.controllers', 'starte
     }
   });
 })
+
+.config(['markedProvider', function (markedProvider) {
+  markedProvider.setOptions({
+    gfm: true,
+    tables: true,
+    highlight: function (code) {
+      return hljs.highlightAuto(code).value;
+    }
+  })
+}])
 
 .config(function($stateProvider, $urlRouterProvider) {
   $stateProvider
@@ -53,7 +63,7 @@ angular.module('starter', ['ionic', 'ngCordova',  'starter.controllers', 'starte
     }
   })
   .state('app.blog-detail', {
-    url: '/blog/:id/:slug',
+    url: '/blog/:slug?:id',
     views: {
       'menuContent': {
         templateUrl: 'templates/blog-detail.html',
