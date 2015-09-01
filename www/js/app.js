@@ -13,6 +13,13 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
       // org.apache.cordova.statusbar required
       StatusBar.styleDefault();
     }
+    var handleOpenURL = function(url) {
+      $cordovaToast.showShortTop(url).then(function(success) {
+        // success
+      }, function (error) {
+        // error
+      });
+    };
   });
 })
 

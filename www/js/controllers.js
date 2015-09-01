@@ -25,6 +25,16 @@ angular.module('starter.controllers', [])
 
   .controller('BlogCtrl', function ($scope, Blog) {
     $scope.blogs = {};
+    //
+    $scope.doRefresh = function() {
+      Blog.async('app').then(function (results) {
+        console.log(results);
+        $scope.blogs = results.objects;
+      });
+      $scope.$broadcast('scroll.refreshComplete');
+      $scope.$apply()
+    };
+
     Blog.async('app').then(function (results) {
       console.log(results);
       $scope.blogs = results.objects;

@@ -28,7 +28,7 @@ angular.module('starter.services', [])
 )
 
 .factory('Blog', function($http, $q) {
-  var blog_api = 'http://127.0.0.1:8000/api/v1/';
+  var blog_api = 'https://www.phodal.com/api/v1/';
   return {
 	  async: function(file_name) {
 		  var def = $q.defer();
