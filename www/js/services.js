@@ -32,10 +32,10 @@ angular.module('starter.services', [])
   return {
 	  async: function(file_name) {
 		  var def = $q.defer();
-		  $http.get(blog_api + file_name + '/?format=json')
+      $http.get(blog_api + file_name + '/?format=json')
 			  .success(function (response) {
 				  def.resolve(response);
-			  }).error(function () {
+			  }).error(function (data, status) {
 				  def.reject("Failed to get albums");
 			  });
 		  return def.promise;

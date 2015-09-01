@@ -41,7 +41,7 @@ angular.module('starter.controllers', [])
     });
   })
 
-  .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog, marked) {
+  .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog) {
     $scope.blog = {};
     Blog.async('blog/' + $stateParams.id).then(function (results) {
       $scope.blog = results;
