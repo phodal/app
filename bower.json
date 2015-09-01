@@ -8,6 +8,7 @@
     "ngCordova": "~0.1.20-alpha",
     "angular-marked": "~0.0.21",
     "angular-highlightjs": "~0.4.3",
-    "highlightjs": "~8.7.0"
+    "highlightjs": "~8.7.0",
+    "github-markdown-css": "~2.0.9"
   }
 }
