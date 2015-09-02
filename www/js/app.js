@@ -57,14 +57,6 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
     }
   })
 
-  .state('app.browse', {
-      url: '/browse',
-      views: {
-        'menuContent': {
-          templateUrl: 'templates/browse.html'
-        }
-      }
-    })
   .state('app.blog', {
     url: '/blog',
     views: {
