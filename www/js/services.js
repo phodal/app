@@ -28,17 +28,23 @@ angular.module('starter.services', [])
 )
 
 .factory('Blog', function($http, $q) {
-  var blog_api = 'https://www.phodal.com/api/v1/';
   return {
-	  async: function(file_name) {
+	  async: function(api) {
 		  var def = $q.defer();
-      $http.get(blog_api + file_name + '/?format=json')
-			  .success(function (response) {
-				  def.resolve(response);
-			  }).error(function (data, status) {
-				  def.reject("Failed to get albums");
-			  });
-		  return def.promise;
+      //$http.get(api)
+      $http({
+        method: 'GET',
+        url: api,
+        headers: {
+          'User-Agent' : 'phodal/2.0 (iOS 8.1, Android 4.4) secret=75456d89c8a654'
+        }
+      })
+      .success(function (response) {
+        def.resolve(response);
+      }).error(function (data, status) {
+        def.reject("Failed to get albums");
+      });
+    return def.promise;
 	  }
   };
 });

@@ -3,8 +3,7 @@
     <ion-list>
       <ion-refresher pulling-text="Pull to refresh" on-refresh="doRefresh()">
       </ion-refresher>
-      <ion-item class="item item-icon-right" ng-repeat="blog in blogs" type="item-text-wrap"
-                href="#/app/blog/{{blog.slug}}?id={{blog.id}}">
+      <ion-item class="item item-icon-right" ng-repeat="blog in blogs" type="item-text-wrap" href="#/app/blog/{{blog.slug}}">
         <h2>{{blog.title}}</h2>
         <i class="icon ion-ios-arrow-right"></i>
       </ion-item>

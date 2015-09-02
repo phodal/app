@@ -70,7 +70,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
     }
   })
   .state('app.blog-detail', {
-    url: '/blog/:slug?:id',
+    url: '/blog/:slug',
     views: {
       'menuContent': {
         templateUrl: 'templates/blog-detail.html',
