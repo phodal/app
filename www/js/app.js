@@ -51,7 +51,8 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
     url: '/search',
     views: {
       'menuContent': {
-        templateUrl: 'templates/search.html'
+        templateUrl: 'templates/search.html',
+        controller: 'SearchCtrl'
       }
     }
   })

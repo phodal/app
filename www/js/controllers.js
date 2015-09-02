@@ -46,4 +46,17 @@ angular.module('starter.controllers', [])
       $scope.blog = results[0];
       $scope.content = $scope.blog.content;
     });
+  })
+
+  .controller('SearchCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog) {
+    $scope.query = "";
+    var doSearch = ionic.debounce(function(query) {
+      Blog.async('https://www.phodal.com/api/app/blog_detail?search=' + query).then(function (results) {
+        $scope.blogs = results;
+      });
+    }, 500);
+
+    $scope.search = function(query) {
+      doSearch(query);
+    };
   });
