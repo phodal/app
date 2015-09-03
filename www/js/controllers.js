@@ -1,6 +1,6 @@
 angular.module('starter.controllers', [])
 
-  .controller('AppCtrl', function ($scope, $ionicModal, $timeout) {
+  .controller('AppCtrl', function ($scope, $ionicModal, $http, $timeout, transformRequestAsFormPost) {
     $scope.loginData = {};
     $ionicModal.fromTemplateUrl('templates/login.html', {
       scope: $scope
@@ -17,8 +17,21 @@ angular.module('starter.controllers', [])
     };
 
     $scope.doLogin = function () {
+      console.log($scope.loginData);
       $timeout(function () {
-        $scope.closeLogin();
+        $http({
+          method: 'POST',
+          url: 'http://localhost:8000/api-token-auth/',
+          data: {
+            username: $scope.loginData.username,
+            password: $scope.loginData.password
+          }
+        }).success(function (response) {
+          console.log(response);
+          $scope.closeLogin();
+        }).error(function (data, status) {
+
+        })
       }, 1000);
     };
   })
