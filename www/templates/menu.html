@@ -18,8 +18,12 @@
     </ion-header-bar>
     <ion-content>
       <ion-list>
-        <ion-item menu-close ng-click="login()">
+        <ion-item menu-close ng-click="login()" ng-show="noLogin">
           Login
+        </ion-item>
+
+        <ion-item menu-close ng-click="logout()" ng-hide="noLogin">
+          Logout
         </ion-item>
         <ion-item menu-close href="#/app/search">
           搜索

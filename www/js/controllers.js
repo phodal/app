@@ -1,7 +1,9 @@
 angular.module('starter.controllers', [])
 
-  .controller('AppCtrl', function ($scope, $ionicModal, $http, $timeout, $cordovaToast) {
+  .controller('AppCtrl', function ($scope, $ionicModal, $http, $timeout, $cordovaToast, $localstorage) {
     $scope.loginData = {};
+    $scope.noLogin = true;
+
     $ionicModal.fromTemplateUrl('templates/login.html', {
       scope: $scope
     }).then(function (modal) {
@@ -16,14 +18,22 @@ angular.module('starter.controllers', [])
       $scope.modal.show();
     };
 
+    $scope.logout = function (){
+      $scope.noLogin = true;
+      $localstorage.set('token', "");
+    };
+
     $scope.doLogin = function () {
       $timeout(function () {
+        var username = $scope.loginData.username;
+        var password = $scope.loginData.password;
+
         $http({
           method: 'POST',
           url: 'https://www.phodal.com/api-token-auth/',
           data: {
-            username: $scope.loginData.username,
-            password: $scope.loginData.password
+            username: username,
+            password: password
           },
           headers: {
             'Content-Type': 'application/json; charset=UTF-8',
@@ -31,6 +41,10 @@ angular.module('starter.controllers', [])
           }
         }).success(function (response) {
           console.log('token' + response.token);
+          $scope.noLogin = false;
+          $localstorage.set('token', response.token);
+          $localstorage.set('username', username);
+
           $cordovaToast
             .show('Login Success', 'long', 'center')
             .then(function(success) {
