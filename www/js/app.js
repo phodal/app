@@ -1,16 +1,13 @@
 angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controllers', 'starter.services'])
 
-.run(function($ionicPlatform, $cordovaToast) {
+.run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
-    // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
-    // for form inputs)
     if (window.cordova && window.cordova.plugins.Keyboard) {
       cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
       cordova.plugins.Keyboard.disableScroll(true);
 
     }
     if (window.StatusBar) {
-      // org.apache.cordova.statusbar required
       StatusBar.styleDefault();
     }
   });
@@ -29,7 +26,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
 .run(['$state', '$window',
   function($state, $window) {
     $window.addEventListener('AppIndexing', function(e) {
-      var urlSlug = e.detail.url.split("/");
+      var urlSlug = e.url.split("/");
         if(urlSlug[3] && urlSlug[4] && urlSlug[3] === 'blog'){
           $state.go('app.blog-detail', {slug: urlSlug[4]});
         }
@@ -79,7 +76,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
 });
 
 function handleOpenURL(url) {
-  var event = new CustomEvent('AppIndexing', {detail: {'url': url}});
+  var event = new CustomEvent('AppIndexing', {'url':url});
   setTimeout( function() {
       window.dispatchEvent(event);
     }, 0);
