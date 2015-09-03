@@ -1,6 +1,6 @@
 angular.module('starter.controllers', [])
 
-  .controller('AppCtrl', function ($scope, $ionicModal, $http, $timeout, $cordovaPreferences) {
+  .controller('AppCtrl', function ($scope, $ionicModal, $http, $timeout, $cordovaToast) {
     $scope.loginData = {};
     $ionicModal.fromTemplateUrl('templates/login.html', {
       scope: $scope
@@ -31,10 +31,13 @@ angular.module('starter.controllers', [])
           }
         }).success(function (response) {
           console.log('token' + response.token);
-          $cordovaPreferences.set('token', response.token).then(function () {
-            console.log('token' + response.token + 'successfully saved!');
-            $scope.closeLogin();
-          });
+          $cordovaToast
+            .show('Login Success', 'long', 'center')
+            .then(function(success) {
+              $scope.closeLogin();
+            }, function (error) {
+              // error
+            });
         }).error(function (data, status) {
           console.log('data, status', data, status)
         })
