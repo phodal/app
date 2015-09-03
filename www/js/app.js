@@ -8,6 +8,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
 
     }
     if (window.StatusBar) {
+      // org.apache.cordova.statusbar required
       StatusBar.styleDefault();
     }
   });
@@ -26,7 +27,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
 .run(['$state', '$window',
   function($state, $window) {
     $window.addEventListener('AppIndexing', function(e) {
-      var urlSlug = e.url.split("/");
+      var urlSlug = e.detail.url.split("/");
         if(urlSlug[3] && urlSlug[4] && urlSlug[3] === 'blog'){
           $state.go('app.blog-detail', {slug: urlSlug[4]});
         }
@@ -76,7 +77,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
 });
 
 function handleOpenURL(url) {
-  var event = new CustomEvent('AppIndexing', {'url':url});
+  var event = new CustomEvent('AppIndexing', {detail: {'url': url}});
   setTimeout( function() {
       window.dispatchEvent(event);
     }, 0);
