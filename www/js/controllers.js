@@ -152,6 +152,8 @@ angular.module('starter.controllers', [])
         if ($localstorage.get('draft')) {
           $localstorage.remove('draft');
         }
+
+        $scope.posts = {};
         $cordovaToast
           .show('Create Success', 'long', 'center')
           .then(function (success) {
