@@ -10,6 +10,7 @@
     "angular-highlightjs": "~0.4.3",
     "highlightjs": "~8.7.0",
     "github-markdown-css": "~2.0.9",
-    "angular-elastic": "~2.5.0"
+    "angular-elastic": "~2.5.0",
+    "angular-messages": "1.4.3"
   }
 }

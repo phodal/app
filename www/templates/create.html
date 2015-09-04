@@ -6,38 +6,43 @@
     <button class="button button-dark" ng-click="save()" ng-hide="isLocalDraft()">
       存为草稿
     </button>
-    <span></span>
-    <button class="button" ng-click="create()">
-      发送
-    </button>
   </ion-nav-buttons>
   <ion-content>
-    <form ng-submit="create()">
+    <form ng-submit="create()" name="postsForm" novalidate>
       <div class="list">
-        <ion-toggle ng-model="posts.status" toggle-class="toggle-calm">是否直接发布</ion-toggle>
-
-        <label class="item item-input">
-          <span class="input-label">发布日期</span>
-          <input type="date" ng-model="posts.publish_date">
-        </label>
-
         <label class="item item-input">
           <span class="input-label">Title</span>
-          <input id="slug" type="text" placeholder="Write here" ng-model="posts.title">
-        </label>
-
-        <label class="item item-input">
-          <span class="input-label">Slug</span>
-          <input id="title" type="text" placeholder="Write here" ng-model="posts.slug">
+          <input id="slug" type="text" name="title" placeholder="Write here" ng-model="posts.title" required
+                 ng-minlength="2" ng-maxlength="70">
         </label>
 
         <label class="item item-input">
           <span class="input-label">内容</span>
         </label>
         <label class="item item-input">
-          <textarea id="content" msd-elastic="\n" rows="10" ng-model="posts.content" placeholder="Write here"></textarea>
+          <textarea id="content" name="content" msd-elastic="\n" rows="10" placeholder="Write here"
+                    ng-model="posts.content" required ng-minlength="2" ng-maxlength="2000"></textarea>
         </label>
       </div>
+
+
+      <label class="item item-input">
+        <span class="input-label">发布日期</span>
+        <input type="date" name="date" ng-model="posts.publish_date">
+      </label>
+
+      <label class="item item-input">
+        <span class="input-label">URL</span>
+        <input id="title" type="text" name="slug" placeholder="Write here" ng-model="posts.slug" required
+               ng-minlength="2" ng-maxlength="70">
+      </label>
+
+      <ion-toggle toggle-class="toggle-calm" ng-model="posts.status">是否直接发布</ion-toggle>
+
+
+      <button class="button button-block button-positive" ng-click="create(postsForm)" ng-disabled="postsForm.$invalid"
+              type="submit">发送
+      </button>
     </form>
   </ion-content>
 </ion-view>

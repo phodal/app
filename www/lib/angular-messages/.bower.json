@@ -1,0 +1,20 @@
+{
+  "name": "angular-messages",
+  "version": "1.4.3",
+  "main": "./angular-messages.js",
+  "ignore": [],
+  "dependencies": {
+    "angular": "1.4.3"
+  },
+  "homepage": "https://github.com/angular/bower-angular-messages",
+  "_release": "1.4.3",
+  "_resolution": {
+    "type": "version",
+    "tag": "v1.4.3",
+    "commit": "1b4d6e58e6dd1ce2e7d508fb2e09114980c3f557"
+  },
+  "_source": "git://github.com/angular/bower-angular-messages.git",
+  "_target": "1.4.3",
+  "_originalSource": "angular-messages",
+  "_direct": true
+}
