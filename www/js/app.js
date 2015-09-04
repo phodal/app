@@ -55,6 +55,16 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
     }
   })
 
+  .state('app.blog-create', {
+    url: '/blog/create',
+    views: {
+      'menuContent': {
+        templateUrl: 'templates/create.html',
+        controller: 'CreateBlogCtrl'
+      }
+    }
+  })
+
   .state('app.blog', {
     url: '/blog',
     views: {

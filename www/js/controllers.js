@@ -95,4 +95,8 @@ angular.module('starter.controllers', [])
     $scope.search = function(query) {
       doSearch(query);
     };
-  });
+  })
+
+  .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog) {
+
+  })

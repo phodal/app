@@ -21,9 +21,11 @@
         <ion-item menu-close ng-click="login()" ng-show="noLogin">
           Login
         </ion-item>
-
         <ion-item menu-close ng-click="logout()" ng-hide="noLogin">
           Logout
+        </ion-item>
+        <ion-item menu-close ng-hide="noLogin" href="#/app/blog/create">
+          撰写
         </ion-item>
         <ion-item menu-close href="#/app/search">
           搜索
