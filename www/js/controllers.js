@@ -148,6 +148,7 @@ angular.module('starter.controllers', [])
         if(status === 401) {
           alert(rep.detail);
         }
+        alert(JSON.stringify(rep));
         $localstorage.set('draft', JSON.stringify(data));
         console.log("data:" + JSON.stringify(rep) + "status: " + status);
       })
