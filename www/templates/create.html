@@ -2,18 +2,25 @@
   <ion-content>
     <form ng-submit="create()">
       <div class="list">
+
         <label class="item item-input">
           <span class="input-label">Title</span>
           <input type="text" ng-model="posts.title">
         </label>
+
+        <label class="item item-input">
+          <span class="input-label">Slug</span>
+          <input type="text" ng-model="posts.slug">
+        </label>
+
         <label class="item item-input">
           <span class="input-label">内容</span>
         </label>
         <label class="item item-input">
           <textarea msd-elastic="\n" class="item item-input" ng-model="posts.content"
-                    placeholder="Write here"
-            ></textarea>
+                    placeholder="Write here"></textarea>
         </label>
+
         <label class="item">
           <button class="button button-block button-positive" type="submit">创建</button>
         </label>

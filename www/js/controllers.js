@@ -45,13 +45,13 @@ angular.module('starter.controllers', [])
           $localstorage.set('token', response.token);
           $localstorage.set('username', username);
 
-          $cordovaToast
-            .show('Login Success', 'long', 'center')
-            .then(function(success) {
-              $scope.closeLogin();
-            }, function (error) {
-              // error
-            });
+          //$cordovaToast
+          //  .show('Login Success', 'long', 'center')
+          //  .then(function(success) {
+          //    $scope.closeLogin();
+          //  }, function (error) {
+          //    // error
+          //  });
         }).error(function (data, status) {
           console.log('data, status', data, status)
         })
@@ -97,6 +97,39 @@ angular.module('starter.controllers', [])
     };
   })
 
-  .controller('CreateBlogCtrl', function ($scope) {
+  .controller('CreateBlogCtrl', function ($scope, $localstorage, $http) {
+    $scope.posts = {};
+    $scope.create = function () {
+      var title = $scope.posts.title;
+      var content = $scope.posts.content;
+      var slug = $scope.posts.slug;
+      var token = $localstorage.get('token');
 
-  })
+      $http({
+        method: 'POST',
+        url: 'http://localhost:8000/api/app/blog/',
+        data: {
+          title: title,
+          content: content,
+          slug: slug,
+          user: 1
+        },
+        headers: {
+          'Authorization': 'JWT ' + token,
+          'User-Agent' : 'phodal/2.0 (iOS 8.1, Android 4.4)'
+        }
+      }).success(function (response) {
+        //$cordovaToast
+        //  .show('Create Success', 'long', 'center')
+        //  .then(function(success) {
+        //
+        //  }, function (error) {
+        //    // error
+        //  });
+      }).error(function (data, status) {
+        console.log(JSON.stringify(data));
+        alert("data:" + JSON.stringify(data) + "status: " + status);
+      })
+      ;
+    }
+  });
