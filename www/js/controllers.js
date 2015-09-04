@@ -141,7 +141,7 @@ angular.module('starter.controllers', [])
 
       $http({
         method: 'POST',
-        url: 'http://localhost:8000/api/app/blog/',
+        url: 'http://www/phodal.com/api/app/blog/',
         data: data,
         headers: {
           'Authorization': 'JWT ' + token,
