@@ -18,7 +18,7 @@ angular.module('starter.controllers', [])
       $scope.modal.show();
     };
 
-    $scope.logout = function (){
+    $scope.logout = function () {
       $scope.noLogin = true;
       $localstorage.set('token', "");
     };
@@ -37,7 +37,7 @@ angular.module('starter.controllers', [])
           },
           headers: {
             'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent' : 'phodal/2.0 (iOS 8.1, Android 4.4)'
+            'User-Agent': 'phodal/2.0 (iOS 8.1, Android 4.4)'
           }
         }).success(function (response) {
           console.log('token' + response.token);
@@ -45,13 +45,13 @@ angular.module('starter.controllers', [])
           $localstorage.set('token', response.token);
           $localstorage.set('username', username);
 
-          //$cordovaToast
-          //  .show('Login Success', 'long', 'center')
-          //  .then(function(success) {
-          //    $scope.closeLogin();
-          //  }, function (error) {
-          //    // error
-          //  });
+          $cordovaToast
+            .show('Login Success', 'long', 'center')
+            .then(function (success) {
+              $scope.closeLogin();
+            }, function (error) {
+              // error
+            });
         }).error(function (data, status) {
           console.log('data, status', data, status)
         })
@@ -62,7 +62,7 @@ angular.module('starter.controllers', [])
   .controller('BlogCtrl', function ($scope, Blog) {
     $scope.blogs = {};
     //
-    $scope.doRefresh = function() {
+    $scope.doRefresh = function () {
       Blog.async('app').then(function (results) {
         console.log(results);
         $scope.blogs = results.objects;
@@ -86,18 +86,18 @@ angular.module('starter.controllers', [])
 
   .controller('SearchCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog) {
     $scope.query = "";
-    var doSearch = ionic.debounce(function(query) {
+    var doSearch = ionic.debounce(function (query) {
       Blog.async('https://www.phodal.com/api/app/blog_detail/?search=' + query).then(function (results) {
         $scope.blogs = results;
       });
     }, 500);
 
-    $scope.search = function(query) {
+    $scope.search = function (query) {
       doSearch(query);
     };
   })
 
-  .controller('CreateBlogCtrl', function ($scope, $localstorage, $http) {
+  .controller('CreateBlogCtrl', function ($scope, $localstorage, $cordovaToast, $http) {
     $scope.posts = {};
     $scope.create = function () {
       var title = $scope.posts.title;
@@ -112,20 +112,22 @@ angular.module('starter.controllers', [])
           title: title,
           content: content,
           slug: slug,
+          status: 1,
           user: 1
         },
         headers: {
           'Authorization': 'JWT ' + token,
-          'User-Agent' : 'phodal/2.0 (iOS 8.1, Android 4.4)'
+          'User-Agent': 'phodal/2.0 (iOS 8.1, Android 4.4)'
         }
       }).success(function (response) {
+        console.log(response);
         //$cordovaToast
         //  .show('Create Success', 'long', 'center')
-        //  .then(function(success) {
+        //  .then(function (success) {
         //
         //  }, function (error) {
-        //    // error
-        //  });
+        //     error
+          //});
       }).error(function (data, status) {
         console.log(JSON.stringify(data));
         alert("data:" + JSON.stringify(data) + "status: " + status);
