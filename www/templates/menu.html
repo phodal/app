@@ -20,11 +20,11 @@
       <ion-list>
         <ion-item menu-close ng-click="login()" ng-show="noLogin">
           <i class="icon ion-log-in"></i>
-          Login
+          登录
         </ion-item>
-        <ion-item menu-close ng-click="logout()" ng-hide="noLogin">
+        <ion-item menu-close ng-click="logout()" ng-hide="noLogin" style="color:red">
           <i class="icon ion-log-out"></i>
-          Logout
+          注销
         </ion-item>
         <ion-item menu-close ng-hide="noLogin" href="#/app/blog/create">
           <i class="icon ion-edit"></i>
