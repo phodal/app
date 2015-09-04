@@ -97,6 +97,6 @@ angular.module('starter.controllers', [])
     };
   })
 
-  .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog) {
+  .controller('CreateBlogCtrl', function ($scope) {
 
   })

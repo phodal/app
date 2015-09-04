@@ -8,7 +8,11 @@
         </label>
         <label class="item item-input">
           <span class="input-label">内容</span>
-          <textarea class="item item-input" ng-model="posts.content"></textarea>
+        </label>
+        <label class="item item-input">
+          <textarea msd-elastic="\n" class="item item-input" ng-model="posts.content"
+                    placeholder="Write here"
+            ></textarea>
         </label>
         <label class="item">
           <button class="button button-block button-positive" type="submit">创建</button>
