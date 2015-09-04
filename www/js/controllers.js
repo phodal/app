@@ -104,23 +104,6 @@ angular.module('starter.controllers', [])
       return $scope.alreadyLoadDraft;
     };
 
-    function serialData() {
-      var status = 1;
-      if ($scope.posts.status === true) {
-        status = 2
-      }
-
-      var data = {
-        title: $scope.posts.title,
-        content: $scope.posts.content,
-        slug: $scope.posts.slug,
-        publish_date: $scope.posts.publish_date,
-        status: status,
-        user: 1
-      };
-      return data;
-    }
-
     $scope.load = function () {
       var draft = JSON.parse($localstorage.get('draft'));
       $scope.posts = draft;
@@ -160,7 +143,7 @@ angular.module('starter.controllers', [])
               $state.go('app.blog-detail', {slug: response.slug});
             }
           }, function (error) {
-            error
+            console.log(error);
           });
       }).error(function (rep, status) {
         console.log(JSON.stringify(rep));
@@ -170,3 +153,19 @@ angular.module('starter.controllers', [])
       ;
     }
   });
+
+function serialData(data) {
+  var status = 1;
+  if (data.status === true) {
+    status = 2
+  }
+
+  return {
+    title: data.title,
+    content: data.content,
+    slug: data.slug,
+    publish_date: data.publish_date,
+    status: status,
+    user: 1
+  };
+}
