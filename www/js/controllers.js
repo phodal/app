@@ -24,38 +24,36 @@ angular.module('starter.controllers', [])
     };
 
     $scope.doLogin = function () {
-      $timeout(function () {
-        var username = $scope.loginData.username;
-        var password = $scope.loginData.password;
+      var username = $scope.loginData.username;
+      var password = $scope.loginData.password;
 
-        $http({
-          method: 'POST',
-          url: 'https://www.phodal.com/api-token-auth/',
-          data: {
-            username: username,
-            password: password
-          },
-          headers: {
-            'Content-Type': 'application/json; charset=UTF-8',
-            'User-Agent': 'phodal/2.0 (iOS 8.1, Android 4.4)'
-          }
-        }).success(function (response) {
-          console.log('token' + response.token);
-          $scope.noLogin = false;
-          $localstorage.set('token', response.token);
-          $localstorage.set('username', username);
+      $http({
+        method: 'POST',
+        url: 'https://www.phodal.com/api-token-auth/',
+        data: {
+          username: username,
+          password: password
+        },
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'User-Agent': 'phodal/2.0 (iOS 8.1, Android 4.4)'
+        }
+      }).success(function (response) {
+        console.log('token' + response.token);
+        $scope.noLogin = false;
+        $localstorage.set('token', response.token);
+        $localstorage.set('username', username);
 
-          $cordovaToast
-            .show('Login Success', 'long', 'center')
-            .then(function (success) {
-              $scope.closeLogin();
-            }, function (error) {
-              // error
-            });
-        }).error(function (data, status) {
-          console.log('data, status', data, status)
-        })
-      }, 1000);
+        $cordovaToast
+          .show('Login Success', 'long', 'center')
+          .then(function (success) {
+            $scope.closeLogin();
+          }, function (error) {
+            // error
+          });
+      }).error(function (data, status) {
+        console.log('data, status', data, status)
+      })
     };
   })
 
@@ -145,7 +143,7 @@ angular.module('starter.controllers', [])
 
           });
       }).error(function (rep, status) {
-        if(status === 401) {
+        if (status === 401) {
           alert(rep.detail);
         }
         alert(JSON.stringify(rep));
