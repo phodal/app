@@ -1,12 +1,18 @@
 <ion-view title="撰写博客">
   <ion-nav-buttons side="right">
+    <button class="button button-dark" ng-click="save()">
+      存为草稿
+    </button>
+    <span></span>
     <button class="button" ng-click="create()">
-      发表
+      发送
     </button>
   </ion-nav-buttons>
   <ion-content>
     <form ng-submit="create()">
       <div class="list">
+        <ion-toggle ng-model="posts.status" toggle-class="toggle-calm">是否发表</ion-toggle>
+
         <label class="item item-input">
           <span class="input-label">Title</span>
           <input type="text" placeholder="Write here" ng-model="posts.title">

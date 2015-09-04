@@ -99,35 +99,53 @@ angular.module('starter.controllers', [])
 
   .controller('CreateBlogCtrl', function ($scope, $localstorage, $cordovaToast, $http) {
     $scope.posts = {};
+
+    function serialData() {
+      var status = 1;
+      if ($scope.posts.status === true) {
+        status = 2
+      }
+
+      var data = {
+        title: $scope.posts.title,
+        content: $scope.posts.content,
+        slug: $scope.posts.slug,
+        status: status,
+        user: 1
+      };
+      return data;
+    }
+
+    $scope.load = function () {
+
+    };
+
+    $scope.save = function () {
+      var data = serialData($scope.posts);
+      $localstorage.set('draft', data);
+    };
+
     $scope.create = function () {
-      var title = $scope.posts.title;
-      var content = $scope.posts.content;
-      var slug = $scope.posts.slug;
       var token = $localstorage.get('token');
+      var data = serialData($scope.posts);
 
       $http({
         method: 'POST',
         url: 'http://localhost:8000/api/app/blog/',
-        data: {
-          title: title,
-          content: content,
-          slug: slug,
-          status: 1,
-          user: 1
-        },
+        data: data,
         headers: {
           'Authorization': 'JWT ' + token,
           'User-Agent': 'phodal/2.0 (iOS 8.1, Android 4.4)'
         }
       }).success(function (response) {
         console.log(response);
-        //$cordovaToast
-        //  .show('Create Success', 'long', 'center')
-        //  .then(function (success) {
-        //
-        //  }, function (error) {
-        //     error
-          //});
+        $cordovaToast
+          .show('Create Success', 'long', 'center')
+          .then(function (success) {
+
+          }, function (error) {
+             error
+        });
       }).error(function (data, status) {
         console.log(JSON.stringify(data));
         alert("data:" + JSON.stringify(data) + "status: " + status);
