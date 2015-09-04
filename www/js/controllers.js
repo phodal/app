@@ -99,8 +99,9 @@ angular.module('starter.controllers', [])
 
   .controller('CreateBlogCtrl', function ($scope, $localstorage, $cordovaToast, $http) {
     $scope.posts = {};
+    $scope.alreadyLoadDraft = $localstorage.get('draft') !== undefined;
     $scope.isLocalDraft = function () {
-      return !!$localstorage.get('draft');
+      return $scope.alreadyLoadDraft;
     };
 
     function serialData() {
@@ -124,10 +125,13 @@ angular.module('starter.controllers', [])
       $scope.posts.title = draft.title;
       $scope.posts.slug = draft.slug;
       $scope.posts.content = draft.content;
+
+      $scope.alreadyLoadDraft = false;
     };
 
     $scope.save = function () {
       var data = serialData($scope.posts);
+      $scope.alreadyLoadDraft = true;
       $localstorage.set('draft', JSON.stringify(data));
     };
 
@@ -145,7 +149,7 @@ angular.module('starter.controllers', [])
         }
       }).success(function (response) {
         console.log(response);
-        if($localstorage.get('draft')) {
+        if ($localstorage.get('draft')) {
           $localstorage.remove('draft');
         }
         $cordovaToast
