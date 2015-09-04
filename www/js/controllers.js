@@ -130,7 +130,6 @@ angular.module('starter.controllers', [])
           'User-Agent': 'phodal/2.0 (iOS 8.1, Android 4.4)'
         }
       }).success(function (response) {
-        console.log(response);
         if ($localstorage.get('draft')) {
           $localstorage.remove('draft');
         }
@@ -143,12 +142,14 @@ angular.module('starter.controllers', [])
               $state.go('app.blog-detail', {slug: response.slug});
             }
           }, function (error) {
-            console.log(error);
+
           });
       }).error(function (rep, status) {
-        console.log(JSON.stringify(rep));
+        if(status === 401) {
+          alert(rep.detail);
+        }
         $localstorage.set('draft', JSON.stringify(data));
-        alert("data:" + JSON.stringify(rep) + "status: " + status);
+        console.log("data:" + JSON.stringify(rep) + "status: " + status);
       })
       ;
     }
