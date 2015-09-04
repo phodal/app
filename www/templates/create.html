@@ -1,6 +1,9 @@
 <ion-view title="撰写博客">
   <ion-nav-buttons side="right">
-    <button class="button button-dark" ng-click="save()">
+    <button class="button button-dark" ng-click="load()" ng-show="isLocalDraft()">
+      载入草稿
+    </button>
+    <button class="button button-dark" ng-click="save()" ng-hide="isLocalDraft()">
       存为草稿
     </button>
     <span></span>
@@ -15,19 +18,19 @@
 
         <label class="item item-input">
           <span class="input-label">Title</span>
-          <input type="text" placeholder="Write here" ng-model="posts.title">
+          <input id="slug" type="text" placeholder="Write here" ng-model="posts.title">
         </label>
 
         <label class="item item-input">
           <span class="input-label">Slug</span>
-          <input type="text" placeholder="Write here" ng-model="posts.slug">
+          <input id="title" type="text" placeholder="Write here" ng-model="posts.slug">
         </label>
 
         <label class="item item-input">
           <span class="input-label">内容</span>
         </label>
         <label class="item item-input">
-          <textarea msd-elastic="\n" rows="10" ng-model="posts.content" placeholder="Write here"></textarea>
+          <textarea id="content" msd-elastic="\n" rows="10" ng-model="posts.content" placeholder="Write here"></textarea>
         </label>
       </div>
     </form>

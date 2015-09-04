@@ -20,7 +20,7 @@ angular.module('starter.controllers', [])
 
     $scope.logout = function () {
       $scope.noLogin = true;
-      $localstorage.set('token', "");
+      $localstorage.remove('token');
     };
 
     $scope.doLogin = function () {
@@ -99,6 +99,9 @@ angular.module('starter.controllers', [])
 
   .controller('CreateBlogCtrl', function ($scope, $localstorage, $cordovaToast, $http) {
     $scope.posts = {};
+    $scope.isLocalDraft = function () {
+      return !!$localstorage.get('draft');
+    };
 
     function serialData() {
       var status = 1;
@@ -117,12 +120,15 @@ angular.module('starter.controllers', [])
     }
 
     $scope.load = function () {
-
+      var draft = JSON.parse($localstorage.get('draft'));
+      $scope.posts.title = draft.title;
+      $scope.posts.slug = draft.slug;
+      $scope.posts.content = draft.content;
     };
 
     $scope.save = function () {
       var data = serialData($scope.posts);
-      $localstorage.set('draft', data);
+      $localstorage.set('draft', JSON.stringify(data));
     };
 
     $scope.create = function () {
@@ -139,16 +145,20 @@ angular.module('starter.controllers', [])
         }
       }).success(function (response) {
         console.log(response);
+        if($localstorage.get('draft')) {
+          $localstorage.remove('draft');
+        }
         $cordovaToast
           .show('Create Success', 'long', 'center')
           .then(function (success) {
 
           }, function (error) {
-             error
-        });
-      }).error(function (data, status) {
-        console.log(JSON.stringify(data));
-        alert("data:" + JSON.stringify(data) + "status: " + status);
+            error
+          });
+      }).error(function (rep, status) {
+        console.log(JSON.stringify(rep));
+        $localstorage.set('draft', JSON.stringify(data));
+        alert("data:" + JSON.stringify(rep) + "status: " + status);
       })
       ;
     }
