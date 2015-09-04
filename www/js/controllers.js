@@ -97,7 +97,7 @@ angular.module('starter.controllers', [])
     };
   })
 
-  .controller('CreateBlogCtrl', function ($scope, $localstorage, $cordovaToast, $http) {
+  .controller('CreateBlogCtrl', function ($scope, $localstorage, $cordovaToast, $http, $state) {
     $scope.posts = {};
     $scope.alreadyLoadDraft = $localstorage.get('draft') !== undefined;
     $scope.isLocalDraft = function () {
@@ -156,8 +156,10 @@ angular.module('starter.controllers', [])
         $scope.posts = {};
         $cordovaToast
           .show('Create Success', 'long', 'center')
-          .then(function (success) {
-
+          .then(function (response) {
+            if (data.status === 2) {
+              $state.go('app.blog-detail', {slug: response.slug});
+            }
           }, function (error) {
             error
           });
