@@ -14,7 +14,12 @@
   <ion-content>
     <form ng-submit="create()">
       <div class="list">
-        <ion-toggle ng-model="posts.status" toggle-class="toggle-calm">是否发表</ion-toggle>
+        <ion-toggle ng-model="posts.status" toggle-class="toggle-calm">是否直接发布</ion-toggle>
+
+        <label class="item item-input">
+          <span class="input-label">发布日期</span>
+          <input type="date" ng-model="posts.publish_date">
+        </label>
 
         <label class="item item-input">
           <span class="input-label">Title</span>

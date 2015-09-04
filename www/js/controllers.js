@@ -114,6 +114,7 @@ angular.module('starter.controllers', [])
         title: $scope.posts.title,
         content: $scope.posts.content,
         slug: $scope.posts.slug,
+        publish_date: $scope.posts.publish_date,
         status: status,
         user: 1
       };
@@ -122,10 +123,8 @@ angular.module('starter.controllers', [])
 
     $scope.load = function () {
       var draft = JSON.parse($localstorage.get('draft'));
-      $scope.posts.title = draft.title;
-      $scope.posts.slug = draft.slug;
-      $scope.posts.content = draft.content;
-
+      $scope.posts = draft;
+      $scope.posts.publish_date = new Date(draft.publish_date);
       $scope.alreadyLoadDraft = false;
     };
 
