@@ -152,8 +152,7 @@ angular.module('starter.controllers', [])
         alert(JSON.stringify(rep));
         $localstorage.set('draft', JSON.stringify(data));
         console.log("data:" + JSON.stringify(rep) + "status: " + status);
-      })
-      ;
+      });
     }
   });
 
