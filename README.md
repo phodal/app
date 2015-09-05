@@ -19,6 +19,10 @@
 1. use full path markdown
 2. Markdown Improve
 
+##Screenshot
+
+![Phodal App](./screenshots/1.pic.jpg) ![Phodal App](./screenshots/3.pic.jpg) ![Phodal App](./screenshots/6.pic.jpg)
+
 ##License
 
 © 2014 [Phodal Huang][phodal]. This code is distributed under the MIT license.
