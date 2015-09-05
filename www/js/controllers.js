@@ -3,6 +3,9 @@ angular.module('starter.controllers', [])
   .controller('AppCtrl', function ($scope, $ionicModal, $http, $timeout, $cordovaToast, $localstorage) {
     $scope.loginData = {};
     $scope.noLogin = true;
+    if($localstorage.get('username')) {
+      $scope.loginData.username = $localstorage.get('username');
+    }
 
     $ionicModal.fromTemplateUrl('templates/login.html', {
       scope: $scope
