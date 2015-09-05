@@ -2,12 +2,18 @@
 
 > A Mobile App for [https://www.phodal.com/](https://www.phodal.com/).
 
+##Feature
+
+1. See All Blogposts
+2. Login/Logout
+3. Create Posts(Publish/Waiting for Publish)
+4. Save/Load Draft
+
 ##Tech 
 
 1. Django 
 2. Django REST Framework
 3. Django REST Framework JWT
-
 4. Angular
 5. Ionic
 6. ngMessages
