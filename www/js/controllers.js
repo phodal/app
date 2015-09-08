@@ -78,7 +78,7 @@ angular.module('starter.controllers', [])
   })
 
   .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog) {
-    var converter = new showdown.Converter();
+    var converter = new showdown.Converter({ extensions: ['Images']});
 
     $scope.blog = {};
     Blog.async('https://www.phodal.com/api/app/blog_detail/?search_slug=' + $stateParams.slug).then(function (results) {
