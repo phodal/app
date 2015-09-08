@@ -1,4 +1,6 @@
-angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controllers', 'starter.services', 'monospaced.elastic', 'ngMessages'])
+hljs.initHighlightingOnLoad();
+
+angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter.services', 'monospaced.elastic', 'ngMessages'])
 
   .run(function ($ionicPlatform) {
     $ionicPlatform.ready(function () {
@@ -13,16 +15,6 @@ angular.module('starter', ['ionic', 'ngCordova', 'hc.marked', 'starter.controlle
       }
     });
   })
-
-  .config(['markedProvider', function (markedProvider) {
-    markedProvider.setOptions({
-      gfm: true,
-      tables: true,
-      highlight: function (code) {
-        return hljs.highlightAuto(code).value;
-      }
-    })
-  }])
 
   .run(['$state', '$window',
     function ($state, $window) {

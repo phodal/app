@@ -78,10 +78,13 @@ angular.module('starter.controllers', [])
   })
 
   .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog) {
+    var converter = new showdown.Converter();
+
     $scope.blog = {};
     Blog.async('https://www.phodal.com/api/app/blog_detail/?search_slug=' + $stateParams.slug).then(function (results) {
       $scope.blog = results[0];
       $scope.content = $scope.blog.content;
+      $scope.htmlContent = $sce.trustAsHtml(converter.makeHtml($scope.blog.content));
     });
   })
 
