@@ -29,12 +29,12 @@
 
 ![Phodal App](./screenshots/1.pic.jpg) ![Phodal App](./screenshots/3.pic.jpg) ![Phodal App](./screenshots/6.pic.jpg)
 
-<a href="https://play.google.com/store/apps/details?id=com.phodal.blog">
+<a href="https://play.google.com/store/apps/details?id=com.phodal.designiot">
   <img alt="Get it on Google Play"
-       src="/static/img/play.png" />
+       src="https://developer.android.com/images/brand/zh-cn_generic_rgb_wo_60.png" />
 </a>
 
 ##License
 
-© 2014 [Phodal Huang][phodal]. This code is distributed under the MIT license.
+© 2015 [Phodal Huang][phodal]. This code is distributed under the MIT license.
 [phodal]:http://www.phodal.com/
