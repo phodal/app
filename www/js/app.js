@@ -57,6 +57,16 @@ angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter
         }
       })
 
+      .state('app.event', {
+        url: '/event/create',
+        views: {
+          'menuContent': {
+            templateUrl: 'templates/event_create.html',
+            controller: 'CreateEventCtrl'
+          }
+        }
+      })
+
       .state('app.blog', {
         url: '/blog',
         views: {

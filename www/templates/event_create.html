@@ -1,0 +1,30 @@
+<ion-view title="撰写">
+  <ion-content>
+    <form ng-submit="create()" name="eventForm" novalidate>
+      <div class="list">
+        <label class="item item-input">
+          <span class="input-label">内容</span>
+        </label>
+        <label class="item item-input">
+          <textarea id="content" name="content" msd-elastic="\n" rows="10" placeholder="Write here"
+                    ng-model="event.content" required ng-minlength="2" ng-maxlength="140"></textarea>
+        </label>
+      </div>
+
+
+      <label class="item item-input">
+        <span class="input-label">事件日期</span>
+        <input type="date" name="date" ng-model="event.date">
+      </label>
+
+      <label class="item item-input">
+        <span class="input-label">地点</span>
+        <input type="text" name="date" ng-model="event.location" ng-minlength="2">
+      </label>
+
+      <button class="button button-block button-positive" ng-click="create(eventForm)" ng-disabled="eventForm.$invalid"
+              type="submit">发布
+      </button>
+    </form>
+  </ion-content>
+</ion-view>

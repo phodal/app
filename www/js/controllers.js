@@ -157,6 +157,48 @@ angular.module('starter.controllers', [])
         console.log("data:" + JSON.stringify(rep) + "status: " + status);
       });
     }
+  })
+
+  .controller('CreateEventCtrl', function ($scope, $localstorage, $cordovaToast, $http, $state, $filter) {
+    $scope.event = {};
+    $scope.create = function () {
+      var token = $localstorage.get('token');
+      var data = {
+        content: $scope.event.content,
+        date: $filter('date')(new Date(), 'yyyy-MM-dd'),
+        location: $scope.event.location,
+        pub_date: $filter('date')(new Date(), "yyyy-MM-dd'T'HH:mm:ssZ")
+      };
+      console.log(data);
+
+      $http({
+        method: 'POST',
+        url: 'https://www.phodal.com/api/app/create/',
+        data: data,
+        headers: {
+          'Authorization': 'JWT ' + token,
+          'User-Agent': 'phodal/2.0 (iOS 8.1, Android 4.4)'
+        }
+      }).success(function (response) {
+        console.log(response);
+        $scope.event = {};
+        $cordovaToast
+          .show('Create Success', 'long', 'center')
+          .then(function (response) {
+            if (data.status === 2) {
+              $state.go('app.blog-detail', {slug: response.slug});
+            }
+          }, function (error) {
+
+          });
+      }).error(function (rep, status) {
+        if (status === 401) {
+          alert(rep.detail);
+        }
+        $scope.event = data;
+        alert(JSON.stringify(rep));
+      });
+    }
   });
 
 function serialData(data) {
