@@ -65,8 +65,7 @@ angular.module('starter.controllers', [])
     $scope.blogOffset = 0;
     //
     $scope.doRefresh = function () {
-      Blog.async('app').then(function (results) {
-        console.log(results);
+      Blog.async('https://www.phodal.com/api/v1/app/?format=json').then(function (results) {
         $scope.blogs = results.objects;
       });
       $scope.$broadcast('scroll.refreshComplete');
