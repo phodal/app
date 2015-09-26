@@ -154,7 +154,6 @@ angular.module('starter.controllers', [])
         }
         alert(JSON.stringify(rep));
         $localstorage.set('draft', JSON.stringify(data));
-        console.log("data:" + JSON.stringify(rep) + "status: " + status);
       });
     }
   })
@@ -169,7 +168,6 @@ angular.module('starter.controllers', [])
         location: $scope.event.location,
         pub_date: $filter('date')(new Date(), "yyyy-MM-dd'T'HH:mm:ssZ")
       };
-      console.log(data);
 
       $http({
         method: 'POST',
@@ -180,7 +178,6 @@ angular.module('starter.controllers', [])
           'User-Agent': 'phodal/2.0 (iOS 8.1, Android 4.4)'
         }
       }).success(function (response) {
-        console.log(response);
         $scope.event = {};
         $cordovaToast
           .show('Create Success', 'long', 'center')

@@ -8,7 +8,7 @@
     return [
       { type: 'output', filter: function(source){
         return source.replace(/<img src="\/static\/(.*) \/>/gi, function(match, image) {
-          return '<img src="https://www.phodal.com/static/' + image + ' />';
+          return '<ion-scroll zooming="true" direction="xy" style="width: auto; height: auto"><img src="https://www.phodal.com/static/' + image + ' /> </ion-scroll>';
         });
       }}
     ];
