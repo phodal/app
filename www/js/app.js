@@ -1,7 +1,6 @@
 hljs.initHighlightingOnLoad();
 
-angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter.services', 'monospaced.elastic', 'ngMessages'])
-
+angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter.services', 'ngMessages', 'hljs'])
   .run(function ($ionicPlatform) {
     $ionicPlatform.ready(function () {
       if (window.cordova && window.cordova.plugins.Keyboard) {
@@ -26,7 +25,12 @@ angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter
       });
     }
   ])
-
+  .config(function (hljsServiceProvider) {
+    hljsServiceProvider.setOptions({
+      // replace tab with 4 spaces
+      tabReplace: '    '
+    });
+  })
   .config(function ($stateProvider, $urlRouterProvider) {
     $stateProvider
 

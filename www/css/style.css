@@ -2,3 +2,11 @@
 .blogDetail img {
   width: 100%;
 }
+
+.blogDetail h2 {
+  font-size: 1.5em;
+}
+
+.blogDetail h3 {
+  font-size: 1.2em;
+}
