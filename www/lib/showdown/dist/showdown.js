@@ -1,5 +1,91 @@
-;/*! showdown 28-05-2015 */
+;/*! showdown 19-10-2015 */
 (function(){
+/**
+ * Created by Tivie on 13-07-2015.
+ */
+
+function getDefaultOpts(simple) {
+  'use strict';
+
+  var defaultOptions = {
+    omitExtraWLInCodeBlocks: {
+      default: false,
+      describe: 'Omit the default extra whiteline added to code blocks',
+      type: 'boolean'
+    },
+    noHeaderId: {
+      default: false,
+      describe: 'Turn on/off generated header id',
+      type: 'boolean'
+    },
+    prefixHeaderId: {
+      default: false,
+      describe: 'Specify a prefix to generated header ids',
+      type: 'string'
+    },
+    headerLevelStart: {
+      default: false,
+      describe: 'The header blocks level start',
+      type: 'integer'
+    },
+    parseImgDimensions: {
+      default: false,
+      describe: 'Turn on/off image dimension parsing',
+      type: 'boolean'
+    },
+    simplifiedAutoLink: {
+      default: false,
+      describe: 'Turn on/off GFM autolink style',
+      type: 'boolean'
+    },
+    literalMidWordUnderscores: {
+      default: false,
+      describe: 'Parse midword underscores as literal underscores',
+      type: 'boolean'
+    },
+    strikethrough: {
+      default: false,
+      describe: 'Turn on/off strikethrough support',
+      type: 'boolean'
+    },
+    tables: {
+      default: false,
+      describe: 'Turn on/off tables support',
+      type: 'boolean'
+    },
+    tablesHeaderId: {
+      default: false,
+      describe: 'Add an id to table headers',
+      type: 'boolean'
+    },
+    ghCodeBlocks: {
+      default: true,
+      describe: 'Turn on/off GFM fenced code blocks support',
+      type: 'boolean'
+    },
+    tasklists: {
+      default: false,
+      describe: 'Turn on/off GFM tasklist support',
+      type: 'boolean'
+    },
+    smoothLivePreview: {
+      default: false,
+      describe: 'Prevents weird effects in live previews due to incomplete input',
+      type: 'boolean'
+    }
+  };
+  if (simple === false) {
+    return JSON.parse(JSON.stringify(defaultOptions));
+  }
+  var ret = {};
+  for (var opt in defaultOptions) {
+    if (defaultOptions.hasOwnProperty(opt)) {
+      ret[opt] = defaultOptions[opt].default;
+    }
+  }
+  return ret;
+}
+
 /**
  * Created by Tivie on 06-01-2015.
  */
@@ -8,9 +94,20 @@
 var showdown = {},
     parsers = {},
     extensions = {},
-    globalOptions = {
-      omitExtraWLInCodeBlocks: false,
-      prefixHeaderId:          false
+    globalOptions = getDefaultOpts(true),
+    flavor = {
+      github: {
+        omitExtraWLInCodeBlocks:   true,
+        prefixHeaderId:            'user-content-',
+        simplifiedAutoLink:        true,
+        literalMidWordUnderscores: true,
+        strikethrough:             true,
+        tables:                    true,
+        tablesHeaderId:            true,
+        ghCodeBlocks:              true,
+        tasklists:                 true
+      },
+      vanilla: getDefaultOpts(true)
     };
 
 /**
@@ -19,7 +116,10 @@ var showdown = {},
  */
 showdown.helper = {};
 
-// Public properties
+/**
+ * TODO LEGACY SUPPORT CODE
+ * @type {{}}
+ */
 showdown.extensions = {};
 
 /**
@@ -49,11 +149,47 @@ showdown.getOption = function (key) {
 /**
  * Get the global options
  * @static
- * @returns {{omitExtraWLInCodeBlocks: boolean, prefixHeaderId: boolean}}
+ * @returns {{}}
  */
 showdown.getOptions = function () {
   'use strict';
   return globalOptions;
+};
+
+/**
+ * Reset global options to the default values
+ * @static
+ */
+showdown.resetOptions = function () {
+  'use strict';
+  globalOptions = getDefaultOpts(true);
+};
+
+/**
+ * Set the flavor showdown should use as default
+ * @param {string} name
+ */
+showdown.setFlavor = function (name) {
+  'use strict';
+  if (flavor.hasOwnProperty(name)) {
+    var preset = flavor[name];
+    for (var option in preset) {
+      if (preset.hasOwnProperty(option)) {
+        globalOptions[option] = preset[option];
+      }
+    }
+  }
+};
+
+/**
+ * Get the default options
+ * @static
+ * @param {boolean} [simple=true]
+ * @returns {{}}
+ */
+showdown.getDefaultOptions = function (simple) {
+  'use strict';
+  return getDefaultOpts(simple);
 };
 
 /**
@@ -81,6 +217,13 @@ showdown.subParser = function (name, func) {
   }
 };
 
+/**
+ * Gets or registers an extension
+ * @static
+ * @param {string} name
+ * @param {object|function=} ext
+ * @returns {*}
+ */
 showdown.extension = function (name, ext) {
   'use strict';
 
@@ -90,230 +233,183 @@ showdown.extension = function (name, ext) {
 
   name = showdown.helper.stdExtName(name);
 
+  // Getter
   if (showdown.helper.isUndefined(ext)) {
-    return getExtension();
+    if (!extensions.hasOwnProperty(name)) {
+      throw Error('Extension named ' + name + ' is not registered!');
+    }
+    return extensions[name];
+
+    // Setter
   } else {
-    return setExtension();
+    // Expand extension if it's wrapped in a function
+    if (typeof ext === 'function') {
+      ext = ext();
+    }
+
+    // Ensure extension is an array
+    if (!showdown.helper.isArray(ext)) {
+      ext = [ext];
+    }
+
+    var validExtension = validate(ext, name);
+
+    if (validExtension.valid) {
+      extensions[name] = ext;
+    } else {
+      throw Error(validExtension.error);
+    }
   }
 };
 
-function getExtension(name) {
+/**
+ * Gets all extensions registered
+ * @returns {{}}
+ */
+showdown.getAllExtensions = function () {
+  'use strict';
+  return extensions;
+};
+
+/**
+ * Remove an extension
+ * @param {string} name
+ */
+showdown.removeExtension = function (name) {
+  'use strict';
+  delete extensions[name];
+};
+
+/**
+ * Removes all extensions
+ */
+showdown.resetExtensions = function () {
+  'use strict';
+  extensions = {};
+};
+
+/**
+ * Validate extension
+ * @param {array} extension
+ * @param {string} name
+ * @returns {{valid: boolean, error: string}}
+ */
+function validate(extension, name) {
   'use strict';
 
-  if (!extensions.hasOwnProperty(name)) {
-    throw Error('Extension named ' + name + ' is not registered!');
-  }
-  return extensions[name];
-}
+  var errMsg = (name) ? 'Error in ' + name + ' extension->' : 'Error in unnamed extension',
+    ret = {
+      valid: true,
+      error: ''
+    };
 
-function setExtension(name, ext) {
-  'use strict';
-
-  if (typeof ext !== 'object') {
-    throw Error('A Showdown Extension must be an object, ' + typeof ext + ' given');
+  if (!showdown.helper.isArray(extension)) {
+    extension = [extension];
   }
 
-  if (!showdown.helper.isString(ext.type)) {
-    throw Error('When registering a showdown extension, "type" must be a string, ' + typeof ext.type + ' given');
+  for (var i = 0; i < extension.length; ++i) {
+    var baseMsg = errMsg + ' sub-extension ' + i + ': ',
+        ext = extension[i];
+    if (typeof ext !== 'object') {
+      ret.valid = false;
+      ret.error = baseMsg + 'must be an object, but ' + typeof ext + ' given';
+      return ret;
+    }
+
+    if (!showdown.helper.isString(ext.type)) {
+      ret.valid = false;
+      ret.error = baseMsg + 'property "type" must be a string, but ' + typeof ext.type + ' given';
+      return ret;
+    }
+
+    var type = ext.type = ext.type.toLowerCase();
+
+    // normalize extension type
+    if (type === 'language') {
+      type = ext.type = 'lang';
+    }
+
+    if (type === 'html') {
+      type = ext.type = 'output';
+    }
+
+    if (type !== 'lang' && type !== 'output' && type !== 'listener') {
+      ret.valid = false;
+      ret.error = baseMsg + 'type ' + type + ' is not recognized. Valid values: "lang/language", "output/html" or "listener"';
+      return ret;
+    }
+
+    if (type === 'listener') {
+      if (showdown.helper.isUndefined(ext.listeners)) {
+        ret.valid = false;
+        ret.error = baseMsg + '. Extensions of type "listener" must have a property called "listeners"';
+        return ret;
+      }
+    } else {
+      if (showdown.helper.isUndefined(ext.filter) && showdown.helper.isUndefined(ext.regex)) {
+        ret.valid = false;
+        ret.error = baseMsg + type + ' extensions must define either a "regex" property or a "filter" method';
+        return ret;
+      }
+    }
+
+    if (ext.listeners) {
+      if (typeof ext.listeners !== 'object') {
+        ret.valid = false;
+        ret.error = baseMsg + '"listeners" property must be an object but ' + typeof ext.listeners + ' given';
+        return ret;
+      }
+      for (var ln in ext.listeners) {
+        if (ext.listeners.hasOwnProperty(ln)) {
+          if (typeof ext.listeners[ln] !== 'function') {
+            ret.valid = false;
+            ret.error = baseMsg + '"listeners" property must be an hash of [event name]: [callback]. listeners.' + ln +
+              ' must be a function but ' + typeof ext.listeners[ln] + ' given';
+            return ret;
+          }
+        }
+      }
+    }
+
+    if (ext.filter) {
+      if (typeof ext.filter !== 'function') {
+        ret.valid = false;
+        ret.error = baseMsg + '"filter" must be a function, but ' + typeof ext.filter + ' given';
+        return ret;
+      }
+    } else if (ext.regex) {
+      if (showdown.helper.isString(ext.regex)) {
+        ext.regex = new RegExp(ext.regex, 'g');
+      }
+      if (!ext.regex instanceof RegExp) {
+        ret.valid = false;
+        ret.error = baseMsg + '"regex" property must either be a string or a RegExp object, but ' + typeof ext.regex + ' given';
+        return ret;
+      }
+      if (showdown.helper.isUndefined(ext.replace)) {
+        ret.valid = false;
+        ret.error = baseMsg + '"regex" extensions must implement a replace string or function';
+        return ret;
+      }
+    }
   }
-
-  ext.type = ext.type.toLowerCase();
-
-  extensions[name] = ext;
+  return ret;
 }
 
 /**
- * Showdown Converter class
- *
- * @param {object} [converterOptions]
- * @returns {{makeHtml: Function}}
+ * Validate extension
+ * @param {object} ext
+ * @returns {boolean}
  */
-showdown.Converter = function (converterOptions) {
+showdown.validateExtension = function (ext) {
   'use strict';
 
-  converterOptions = converterOptions || {};
-
-  var options = {},
-      langExtensions = [],
-      outputModifiers = [],
-      parserOrder = [
-        'githubCodeBlocks',
-        'hashHTMLBlocks',
-        'stripLinkDefinitions',
-        'blockGamut',
-        'unescapeSpecialChars'
-      ];
-
-  for (var gOpt in globalOptions) {
-    if (globalOptions.hasOwnProperty(gOpt)) {
-      options[gOpt] = globalOptions[gOpt];
-    }
+  var validateExtension = validate(ext, null);
+  if (!validateExtension.valid) {
+    console.warn(validateExtension.error);
+    return false;
   }
-
-  // Merge options
-  if (typeof converterOptions === 'object') {
-    for (var opt in converterOptions) {
-      if (converterOptions.hasOwnProperty(opt)) {
-        options[opt] = converterOptions[opt];
-      }
-    }
-  }
-
-  // This is a dirty workaround to maintain backwards extension compatibility
-  // We define a self var (which is a copy of this) and inject the makeHtml function
-  // directly to it. This ensures a full converter object is available when iterating over extensions
-  // We should rewrite the extension loading mechanism and use some kind of interface or decorator pattern
-  // and inject the object reference there instead.
-  var self = this;
-  self.makeHtml = makeHtml;
-
-  // Parse options
-  if (options.extensions) {
-
-    // Iterate over each plugin
-    showdown.helper.forEach(options.extensions, function (plugin) {
-      var pluginName = plugin;
-
-      // Assume it's a bundled plugin if a string is given
-      if (typeof plugin === 'string') {
-        var tPluginName = showdown.helper.stdExtName(plugin);
-
-        if (!showdown.helper.isUndefined(showdown.extensions[tPluginName]) && showdown.extensions[tPluginName]) {
-          //Trigger some kind of deprecated alert
-          plugin = showdown.extensions[tPluginName];
-
-        } else if (!showdown.helper.isUndefined(extensions[tPluginName])) {
-          plugin = extensions[tPluginName];
-        }
-      }
-
-      if (typeof plugin === 'function') {
-        // Iterate over each extension within that plugin
-        showdown.helper.forEach(plugin(self), function (ext) {
-          // Sort extensions by type
-          if (ext.type) {
-            if (ext.type === 'language' || ext.type === 'lang') {
-              langExtensions.push(ext);
-            } else if (ext.type === 'output' || ext.type === 'html') {
-              outputModifiers.push(ext);
-            }
-          } else {
-            // Assume language extension
-            outputModifiers.push(ext);
-          }
-        });
-      } else {
-        var errMsg = 'An extension could not be loaded. It was either not found or is not a valid extension.';
-        if (typeof pluginName === 'string') {
-          errMsg = 'Extension "' + pluginName + '" could not be loaded.  It was either not found or is not a valid extension.';
-        }
-        throw errMsg;
-      }
-    });
-  }
-
-  /**
-   * Converts a markdown string into HTML
-   * @param {string} text
-   * @returns {*}
-   */
-  function makeHtml(text) {
-
-    //check if text is not falsy
-    if (!text) {
-      return text;
-    }
-
-    var globals = {
-      gHtmlBlocks:     [],
-      gUrls:           {},
-      gTitles:         {},
-      gListLevel:      0,
-      hashLinkCounts:  {},
-      langExtensions:  langExtensions,
-      outputModifiers: outputModifiers
-    };
-
-    // attacklab: Replace ~ with ~T
-    // This lets us use tilde as an escape char to avoid md5 hashes
-    // The choice of character is arbitrary; anything that isn't
-    // magic in Markdown will work.
-    text = text.replace(/~/g, '~T');
-
-    // attacklab: Replace $ with ~D
-    // RegExp interprets $ as a special character
-    // when it's in a replacement string
-    text = text.replace(/\$/g, '~D');
-
-    // Standardize line endings
-    text = text.replace(/\r\n/g, '\n'); // DOS to Unix
-    text = text.replace(/\r/g, '\n'); // Mac to Unix
-
-    // Make sure text begins and ends with a couple of newlines:
-    text = '\n\n' + text + '\n\n';
-
-    // detab
-    text = parsers.detab(text, options, globals);
-
-    // stripBlankLines
-    text = parsers.stripBlankLines(text, options, globals);
-
-    //run languageExtensions
-    text = parsers.languageExtensions(text, options, globals);
-
-    // Run all registered parsers
-    for (var i = 0; i < parserOrder.length; ++i) {
-      var name = parserOrder[i];
-      text = parsers[name](text, options, globals);
-    }
-
-    // attacklab: Restore dollar signs
-    text = text.replace(/~D/g, '$$');
-
-    // attacklab: Restore tildes
-    text = text.replace(/~T/g, '~');
-
-    // Run output modifiers
-    showdown.helper.forEach(globals.outputModifiers, function (ext) {
-      text = showdown.subParser('runExtension')(ext, text);
-    });
-    text = parsers.outputModifiers(text, options, globals);
-
-    return text;
-  }
-
-  /**
-   * Set an option of this Converter instance
-   * @param {string} key
-   * @param {*} value
-   */
-  function setOption (key, value) {
-    options[key] = value;
-  }
-
-  /**
-   * Get the option of this Converter instance
-   * @param {string} key
-   * @returns {*}
-   */
-  function getOption(key) {
-    return options[key];
-  }
-
-  /**
-   * Get the options of this Converter instance
-   * @returns {{}}
-   */
-  function getOptions() {
-    return options;
-  }
-
-  return {
-    makeHtml: makeHtml,
-    setOption: setOption,
-    getOption: getOption,
-    getOptions: getOptions
-  };
+  return true;
 };
 
 /**
@@ -425,10 +521,488 @@ showdown.helper.escapeCharacters = function escapeCharacters(text, charsToEscape
 };
 
 /**
+ * matchRecursiveRegExp
+ *
+ * (c) 2007 Steven Levithan <stevenlevithan.com>
+ * MIT License
+ *
+ * Accepts a string to search, a left and right format delimiter
+ * as regex patterns, and optional regex flags. Returns an array
+ * of matches, allowing nested instances of left/right delimiters.
+ * Use the "g" flag to return all matches, otherwise only the
+ * first is returned. Be careful to ensure that the left and
+ * right format delimiters produce mutually exclusive matches.
+ * Backreferences are not supported within the right delimiter
+ * due to how it is internally combined with the left delimiter.
+ * When matching strings whose format delimiters are unbalanced
+ * to the left or right, the output is intentionally as a
+ * conventional regex library with recursion support would
+ * produce, e.g. "<<x>" and "<x>>" both produce ["x"] when using
+ * "<" and ">" as the delimiters (both strings contain a single,
+ * balanced instance of "<x>").
+ *
+ * examples:
+ * matchRecursiveRegExp("test", "\\(", "\\)")
+ * returns: []
+ * matchRecursiveRegExp("<t<<e>><s>>t<>", "<", ">", "g")
+ * returns: ["t<<e>><s>", ""]
+ * matchRecursiveRegExp("<div id=\"x\">test</div>", "<div\\b[^>]*>", "</div>", "gi")
+ * returns: ["test"]
+ */
+showdown.helper.matchRecursiveRegExp = function (str, left, right, flags) {
+  'use strict';
+  var	f = flags || '',
+    g = f.indexOf('g') > -1,
+    x = new RegExp(left + '|' + right, f),
+    l = new RegExp(left, f.replace(/g/g, '')),
+    a = [],
+    t, s, m, start, end;
+
+  do {
+    t = 0;
+    while ((m = x.exec(str))) {
+      if (l.test(m[0])) {
+        if (!(t++)) {
+          start = m[0];
+          s = x.lastIndex;
+        }
+      } else if (t) {
+        if (!--t) {
+          end = m[0];
+          var match = str.slice(s, m.index);
+          a.push([start + match + end, match]);
+          if (!g) {
+            return a;
+          }
+        }
+      }
+    }
+  } while (t && (x.lastIndex = s));
+
+  return a;
+};
+
+/**
+ * POLYFILLS
+ */
+if (showdown.helper.isUndefined(console)) {
+  console = {
+    warn: function (msg) {
+      'use strict';
+      alert(msg);
+    },
+    log: function (msg) {
+      'use strict';
+      alert(msg);
+    },
+    error: function (msg) {
+      'use strict';
+      throw msg;
+    }
+  };
+}
+
+/**
+ * Created by Estevao on 31-05-2015.
+ */
+
+/**
+ * Showdown Converter class
+ * @class
+ * @param {object} [converterOptions]
+ * @returns {Converter}
+ */
+showdown.Converter = function (converterOptions) {
+  'use strict';
+
+  var
+      /**
+       * Options used by this converter
+       * @private
+       * @type {{}}
+       */
+      options = {},
+
+      /**
+       * Language extensions used by this converter
+       * @private
+       * @type {Array}
+       */
+      langExtensions = [],
+
+      /**
+       * Output modifiers extensions used by this converter
+       * @private
+       * @type {Array}
+       */
+      outputModifiers = [],
+
+      /**
+       * Event listeners
+       * @private
+       * @type {{}}
+       */
+      listeners = {};
+
+  _constructor();
+
+  /**
+   * Converter constructor
+   * @private
+   */
+  function _constructor() {
+    converterOptions = converterOptions || {};
+
+    for (var gOpt in globalOptions) {
+      if (globalOptions.hasOwnProperty(gOpt)) {
+        options[gOpt] = globalOptions[gOpt];
+      }
+    }
+
+    // Merge options
+    if (typeof converterOptions === 'object') {
+      for (var opt in converterOptions) {
+        if (converterOptions.hasOwnProperty(opt)) {
+          options[opt] = converterOptions[opt];
+        }
+      }
+    } else {
+      throw Error('Converter expects the passed parameter to be an object, but ' + typeof converterOptions +
+      ' was passed instead.');
+    }
+
+    if (options.extensions) {
+      showdown.helper.forEach(options.extensions, _parseExtension);
+    }
+  }
+
+  /**
+   * Parse extension
+   * @param {*} ext
+   * @param {string} [name='']
+   * @private
+   */
+  function _parseExtension(ext, name) {
+
+    name = name || null;
+    // If it's a string, the extension was previously loaded
+    if (showdown.helper.isString(ext)) {
+      ext = showdown.helper.stdExtName(ext);
+      name = ext;
+
+      // LEGACY_SUPPORT CODE
+      if (showdown.extensions[ext]) {
+        console.warn('DEPRECATION WARNING: ' + ext + ' is an old extension that uses a deprecated loading method.' +
+          'Please inform the developer that the extension should be updated!');
+        legacyExtensionLoading(showdown.extensions[ext], ext);
+        return;
+      // END LEGACY SUPPORT CODE
+
+      } else if (!showdown.helper.isUndefined(extensions[ext])) {
+        ext = extensions[ext];
+
+      } else {
+        throw Error('Extension "' + ext + '" could not be loaded. It was either not found or is not a valid extension.');
+      }
+    }
+
+    if (typeof ext === 'function') {
+      ext = ext();
+    }
+
+    if (!showdown.helper.isArray(ext)) {
+      ext = [ext];
+    }
+
+    var validExt = validate(ext, name);
+    if (!validExt.valid) {
+      throw Error(validExt.error);
+    }
+
+    for (var i = 0; i < ext.length; ++i) {
+      switch (ext[i].type) {
+
+        case 'lang':
+          langExtensions.push(ext[i]);
+          break;
+
+        case 'output':
+          outputModifiers.push(ext[i]);
+          break;
+      }
+      if (ext[i].hasOwnProperty(listeners)) {
+        for (var ln in ext[i].listeners) {
+          if (ext[i].listeners.hasOwnProperty(ln)) {
+            listen(ln, ext[i].listeners[ln]);
+          }
+        }
+      }
+    }
+
+  }
+
+  /**
+   * LEGACY_SUPPORT
+   * @param {*} ext
+   * @param {string} name
+   */
+  function legacyExtensionLoading(ext, name) {
+    if (typeof ext === 'function') {
+      ext = ext(new showdown.Converter());
+    }
+    if (!showdown.helper.isArray(ext)) {
+      ext = [ext];
+    }
+    var valid = validate(ext, name);
+
+    if (!valid.valid) {
+      throw Error(valid.error);
+    }
+
+    for (var i = 0; i < ext.length; ++i) {
+      switch (ext[i].type) {
+        case 'lang':
+          langExtensions.push(ext[i]);
+          break;
+        case 'output':
+          outputModifiers.push(ext[i]);
+          break;
+        default:// should never reach here
+          throw Error('Extension loader error: Type unrecognized!!!');
+      }
+    }
+  }
+
+  /**
+   * Listen to an event
+   * @param {string} name
+   * @param {function} callback
+   */
+  function listen(name, callback) {
+    if (!showdown.helper.isString(name)) {
+      throw Error('Invalid argument in converter.listen() method: name must be a string, but ' + typeof name + ' given');
+    }
+
+    if (typeof callback !== 'function') {
+      throw Error('Invalid argument in converter.listen() method: callback must be a function, but ' + typeof callback + ' given');
+    }
+
+    if (!listeners.hasOwnProperty(name)) {
+      listeners[name] = [];
+    }
+    listeners[name].push(callback);
+  }
+
+  /**
+   * Dispatch an event
+   * @private
+   * @param {string} evtName Event name
+   * @param {string} text Text
+   * @param {{}} options Converter Options
+   * @returns {string}
+   */
+  this._dispatch = function dispatch (evtName, text, options) {
+    if (listeners.hasOwnProperty(evtName)) {
+      for (var ei = 0; ei < listeners[evtName].length; ++ei) {
+        var nText = listeners[evtName][ei](evtName, text, this, options);
+        if (nText && typeof nText !== 'undefined') {
+          text = nText;
+        }
+      }
+    }
+    return text;
+  };
+
+  /**
+   * Listen to an event
+   * @param {string} name
+   * @param {function} callback
+   * @returns {showdown.Converter}
+   */
+  this.listen = function (name, callback) {
+    listen(name, callback);
+    return this;
+  };
+
+  /**
+   * Converts a markdown string into HTML
+   * @param {string} text
+   * @returns {*}
+   */
+  this.makeHtml = function (text) {
+    //check if text is not falsy
+    if (!text) {
+      return text;
+    }
+
+    var globals = {
+      gHtmlBlocks:     [],
+      gHtmlSpans:      [],
+      gUrls:           {},
+      gTitles:         {},
+      gDimensions:     {},
+      gListLevel:      0,
+      hashLinkCounts:  {},
+      langExtensions:  langExtensions,
+      outputModifiers: outputModifiers,
+      converter:       this
+    };
+
+    // attacklab: Replace ~ with ~T
+    // This lets us use tilde as an escape char to avoid md5 hashes
+    // The choice of character is arbitrary; anything that isn't
+    // magic in Markdown will work.
+    text = text.replace(/~/g, '~T');
+
+    // attacklab: Replace $ with ~D
+    // RegExp interprets $ as a special character
+    // when it's in a replacement string
+    text = text.replace(/\$/g, '~D');
+
+    // Standardize line endings
+    text = text.replace(/\r\n/g, '\n'); // DOS to Unix
+    text = text.replace(/\r/g, '\n'); // Mac to Unix
+
+    // Make sure text begins and ends with a couple of newlines:
+    text = '\n\n' + text + '\n\n';
+
+    // detab
+    text = showdown.subParser('detab')(text, options, globals);
+
+    // stripBlankLines
+    text = showdown.subParser('stripBlankLines')(text, options, globals);
+
+    //run languageExtensions
+    showdown.helper.forEach(langExtensions, function (ext) {
+      text = showdown.subParser('runExtension')(ext, text, options, globals);
+    });
+
+    // run the sub parsers
+    text = showdown.subParser('githubCodeBlocks')(text, options, globals);
+    text = showdown.subParser('hashHTMLBlocks')(text, options, globals);
+    text = showdown.subParser('hashHTMLSpans')(text, options, globals);
+    text = showdown.subParser('stripLinkDefinitions')(text, options, globals);
+    text = showdown.subParser('blockGamut')(text, options, globals);
+    text = showdown.subParser('unhashHTMLSpans')(text, options, globals);
+    text = showdown.subParser('unescapeSpecialChars')(text, options, globals);
+
+    // attacklab: Restore dollar signs
+    text = text.replace(/~D/g, '$$');
+
+    // attacklab: Restore tildes
+    text = text.replace(/~T/g, '~');
+
+    // Run output modifiers
+    showdown.helper.forEach(outputModifiers, function (ext) {
+      text = showdown.subParser('runExtension')(ext, text, options, globals);
+    });
+
+    return text;
+  };
+
+  /**
+   * Set an option of this Converter instance
+   * @param {string} key
+   * @param {*} value
+   */
+  this.setOption = function (key, value) {
+    options[key] = value;
+  };
+
+  /**
+   * Get the option of this Converter instance
+   * @param {string} key
+   * @returns {*}
+   */
+  this.getOption = function (key) {
+    return options[key];
+  };
+
+  /**
+   * Get the options of this Converter instance
+   * @returns {{}}
+   */
+  this.getOptions = function () {
+    return options;
+  };
+
+  /**
+   * Add extension to THIS converter
+   * @param {{}} extension
+   * @param {string} [name=null]
+   */
+  this.addExtension = function (extension, name) {
+    name = name || null;
+    _parseExtension(extension, name);
+  };
+
+  /**
+   * Use a global registered extension with THIS converter
+   * @param {string} extensionName Name of the previously registered extension
+   */
+  this.useExtension = function (extensionName) {
+    _parseExtension(extensionName);
+  };
+
+  /**
+   * Set the flavor THIS converter should use
+   * @param {string} name
+   */
+  this.setFlavor = function (name) {
+    if (flavor.hasOwnProperty(name)) {
+      var preset = flavor[name];
+      for (var option in preset) {
+        if (preset.hasOwnProperty(option)) {
+          options[option] = preset[option];
+        }
+      }
+    }
+  };
+
+  /**
+   * Remove an extension from THIS converter.
+   * Note: This is a costly operation. It's better to initialize a new converter
+   * and specify the extensions you wish to use
+   * @param {Array} extension
+   */
+  this.removeExtension = function (extension) {
+    if (!showdown.helper.isArray(extension)) {
+      extension = [extension];
+    }
+    for (var a = 0; a < extension.length; ++a) {
+      var ext = extension[a];
+      for (var i = 0; i < langExtensions.length; ++i) {
+        if (langExtensions[i] === ext) {
+          langExtensions[i].splice(i, 1);
+        }
+      }
+      for (var ii = 0; ii < outputModifiers.length; ++i) {
+        if (outputModifiers[ii] === ext) {
+          outputModifiers[ii].splice(i, 1);
+        }
+      }
+    }
+  };
+
+  /**
+   * Get all extension of THIS converter
+   * @returns {{language: Array, output: Array}}
+   */
+  this.getAllExtensions = function () {
+    return {
+      language: langExtensions,
+      output: outputModifiers
+    };
+  };
+};
+
+/**
  * Turn Markdown link shortcuts into XHTML <a> tags.
  */
-showdown.subParser('anchors', function (text, config, globals) {
+showdown.subParser('anchors', function (text, options, globals) {
   'use strict';
+
+  text = globals.converter._dispatch('anchors.before', text, options);
 
   var writeAnchorTag = function (wholeMatch, m1, m2, m3, m4, m5, m6, m7) {
     if (showdown.helper.isUndefined(m7)) {
@@ -499,7 +1073,7 @@ showdown.subParser('anchors', function (text, config, globals) {
    )()()()()					// pad remaining backreferences
    /g,_DoAnchors_callback);
    */
-  text = text.replace(/(\[((?:\[[^\]]*\]|[^\[\]])*)\][ ]?(?:\n[ ]*)?\[(.*?)\])()()()()/g, writeAnchorTag);
+  text = text.replace(/(\[((?:\[[^\]]*]|[^\[\]])*)][ ]?(?:\n[ ]*)?\[(.*?)])()()()()/g, writeAnchorTag);
 
   //
   // Next, inline-style links: [link text](url "optional title")
@@ -532,7 +1106,7 @@ showdown.subParser('anchors', function (text, config, globals) {
    )
    /g,writeAnchorTag);
    */
-  text = text.replace(/(\[((?:\[[^\]]*\]|[^\[\]])*)\]\([ \t]*()<?(.*?(?:\(.*?\).*?)?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g,
+  text = text.replace(/(\[((?:\[[^\]]*]|[^\[\]])*)]\([ \t]*()<?(.*?(?:\(.*?\).*?)?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g,
                       writeAnchorTag);
 
   //
@@ -550,39 +1124,40 @@ showdown.subParser('anchors', function (text, config, globals) {
    )()()()()()      // pad rest of backreferences
    /g, writeAnchorTag);
    */
-  text = text.replace(/(\[([^\[\]]+)\])()()()()()/g, writeAnchorTag);
+  text = text.replace(/(\[([^\[\]]+)])()()()()()/g, writeAnchorTag);
 
+  text = globals.converter._dispatch('anchors.after', text, options);
   return text;
-
 });
 
-showdown.subParser('autoLinks', function (text) {
+showdown.subParser('autoLinks', function (text, options, globals) {
   'use strict';
 
-  text = text.replace(/<((https?|ftp|dict):[^'">\s]+)>/gi, '<a href=\"$1\">$1</a>');
+  text = globals.converter._dispatch('autoLinks.before', text, options);
 
+  var simpleURLRegex  = /\b(((https?|ftp|dict):\/\/|www\.)[^'">\s]+\.[^'">\s]+)(?=\s|$)(?!["<>])/gi,
+      delimUrlRegex   = /<(((https?|ftp|dict):\/\/|www\.)[^'">\s]+)>/gi,
+      simpleMailRegex = /(?:^|[ \n\t])([A-Za-z0-9!#$%&'*+-/=?^_`\{|}~\.]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)(?:$|[ \n\t])/gi,
+      delimMailRegex  = /<(?:mailto:)?([-.\w]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)>/gi;
+
+  text = text.replace(delimUrlRegex, '<a href=\"$1\">$1</a>');
+  text = text.replace(delimMailRegex, replaceMail);
+  //simpleURLRegex  = /\b(((https?|ftp|dict):\/\/|www\.)[-.+~:?#@!$&'()*,;=[\]\w]+)\b/gi,
   // Email addresses: <address@domain.foo>
 
-  /*
-   text = text.replace(/
-   <
-   (?:mailto:)?
-   (
-   [-.\w]+
-   \@
-   [-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+
-   )
-   >
-   /gi);
-   */
-  var pattern = /<(?:mailto:)?([-.\w]+\@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)>/gi;
-  text = text.replace(pattern, function (wholeMatch, m1) {
+  if (options.simplifiedAutoLink) {
+    text = text.replace(simpleURLRegex, '<a href=\"$1\">$1</a>');
+    text = text.replace(simpleMailRegex, replaceMail);
+  }
+
+  function replaceMail(wholeMatch, m1) {
     var unescapedStr = showdown.subParser('unescapeSpecialChars')(m1);
     return showdown.subParser('encodeEmailAddress')(unescapedStr);
-  });
+  }
+
+  text = globals.converter._dispatch('autoLinks.after', text, options);
 
   return text;
-
 });
 
 /**
@@ -592,17 +1167,22 @@ showdown.subParser('autoLinks', function (text) {
 showdown.subParser('blockGamut', function (text, options, globals) {
   'use strict';
 
+  text = globals.converter._dispatch('blockGamut.before', text, options);
+
+  // we parse blockquotes first so that we can have headings and hrs
+  // inside blockquotes
+  text = showdown.subParser('blockQuotes')(text, options, globals);
   text = showdown.subParser('headers')(text, options, globals);
 
   // Do Horizontal Rules:
   var key = showdown.subParser('hashBlock')('<hr />', options, globals);
   text = text.replace(/^[ ]{0,2}([ ]?\*[ ]?){3,}[ \t]*$/gm, key);
   text = text.replace(/^[ ]{0,2}([ ]?\-[ ]?){3,}[ \t]*$/gm, key);
-  text = text.replace(/^[ ]{0,2}([ ]?\_[ ]?){3,}[ \t]*$/gm, key);
+  text = text.replace(/^[ ]{0,2}([ ]?_[ ]?){3,}[ \t]*$/gm, key);
 
   text = showdown.subParser('lists')(text, options, globals);
   text = showdown.subParser('codeBlocks')(text, options, globals);
-  text = showdown.subParser('blockQuotes')(text, options, globals);
+  text = showdown.subParser('tables')(text, options, globals);
 
   // We already ran _HashHTMLBlocks() before, in Markdown(), but that
   // was to escape raw HTML in the original Markdown source. This time,
@@ -611,13 +1191,15 @@ showdown.subParser('blockGamut', function (text, options, globals) {
   text = showdown.subParser('hashHTMLBlocks')(text, options, globals);
   text = showdown.subParser('paragraphs')(text, options, globals);
 
-  return text;
+  text = globals.converter._dispatch('blockGamut.after', text, options);
 
+  return text;
 });
 
 showdown.subParser('blockQuotes', function (text, options, globals) {
   'use strict';
 
+  text = globals.converter._dispatch('blockQuotes.before', text, options);
   /*
    text = text.replace(/
    (								// Wrap whole match in $1
@@ -631,7 +1213,7 @@ showdown.subParser('blockQuotes', function (text, options, globals) {
    /gm, function(){...});
    */
 
-  text = text.replace(/((^[ \t]*>[ \t]?.+\n(.+\n)*\n*)+)/gm, function (wholeMatch, m1) {
+  text = text.replace(/((^[ \t]{0,3}>[ \t]?.+\n(.+\n)*\n*)+)/gm, function (wholeMatch, m1) {
     var bq = m1;
 
     // attacklab: hack around Konqueror 3.5.4 bug:
@@ -642,6 +1224,7 @@ showdown.subParser('blockQuotes', function (text, options, globals) {
     bq = bq.replace(/~0/g, '');
 
     bq = bq.replace(/^[ \t]+$/gm, ''); // trim whitespace-only lines
+    bq = showdown.subParser('githubCodeBlocks')(bq, options, globals);
     bq = showdown.subParser('blockGamut')(bq, options, globals); // recurse
 
     bq = bq.replace(/(^|\n)/g, '$1  ');
@@ -656,6 +1239,8 @@ showdown.subParser('blockQuotes', function (text, options, globals) {
 
     return showdown.subParser('hashBlock')('<blockquote>\n' + bq + '\n</blockquote>', options, globals);
   });
+
+  text = globals.converter._dispatch('blockQuotes.after', text, options);
   return text;
 });
 
@@ -665,6 +1250,7 @@ showdown.subParser('blockQuotes', function (text, options, globals) {
 showdown.subParser('codeBlocks', function (text, options, globals) {
   'use strict';
 
+  text = globals.converter._dispatch('codeBlocks.before', text, options);
   /*
    text = text.replace(text,
    /(?:\n\n|^)
@@ -705,6 +1291,7 @@ showdown.subParser('codeBlocks', function (text, options, globals) {
   // attacklab: strip sentinel
   text = text.replace(/~0/, '');
 
+  text = globals.converter._dispatch('codeBlocks.after', text, options);
   return text;
 });
 
@@ -733,8 +1320,10 @@ showdown.subParser('codeBlocks', function (text, options, globals) {
  *
  *         ... type <code>`bar`</code> ...
  */
-showdown.subParser('codeSpans', function (text) {
+showdown.subParser('codeSpans', function (text, options, globals) {
   'use strict';
+
+  text = globals.converter._dispatch('codeSpans.before', text, options);
 
   /*
    text = text.replace(/
@@ -748,17 +1337,18 @@ showdown.subParser('codeSpans', function (text) {
    (?!`)
    /gm, function(){...});
    */
+  text = text.replace(/(^|[^\\])(`+)([^\r]*?[^`])\2(?!`)/gm,
+    function (wholeMatch, m1, m2, m3) {
+      var c = m3;
+      c = c.replace(/^([ \t]*)/g, '');	// leading whitespace
+      c = c.replace(/[ \t]*$/g, '');	// trailing whitespace
+      c = showdown.subParser('encodeCode')(c);
+      return m1 + '<code>' + c + '</code>';
+    }
+  );
 
-  text = text.replace(/(^|[^\\])(`+)([^\r]*?[^`])\2(?!`)/gm, function (wholeMatch, m1, m2, m3) {
-    var c = m3;
-    c = c.replace(/^([ \t]*)/g, '');	// leading whitespace
-    c = c.replace(/[ \t]*$/g, '');	// trailing whitespace
-    c = showdown.subParser('encodeCode')(c);
-    return m1 + '<code>' + c + '</code>';
-  });
-
+  text = globals.converter._dispatch('codeSpans.after', text, options);
   return text;
-
 });
 
 /**
@@ -942,23 +1532,24 @@ showdown.subParser('escapeSpecialCharsWithinTagAttributes', function (text) {
 showdown.subParser('githubCodeBlocks', function (text, options, globals) {
   'use strict';
 
+  // early exit if option is not enabled
+  if (!options.ghCodeBlocks) {
+    return text;
+  }
+
+  text = globals.converter._dispatch('githubCodeBlocks.before', text, options);
+
   text += '~0';
 
-  text = text.replace(/(?:^|\n)```(.*)\n([\s\S]*?)\n```/g, function (wholeMatch, m1, m2) {
-    var language = m1,
-        codeblock = m2,
-        end = '\n';
-
-    if (options.omitExtraWLInCodeBlocks) {
-      end = '';
-    }
+  text = text.replace(/(?:^|\n)```(.*)\n([\s\S]*?)\n```/g, function (wholeMatch, language, codeblock) {
+    var end = (options.omitExtraWLInCodeBlocks) ? '' : '\n';
 
     codeblock = showdown.subParser('encodeCode')(codeblock);
     codeblock = showdown.subParser('detab')(codeblock);
     codeblock = codeblock.replace(/^\n+/g, ''); // trim leading newlines
     codeblock = codeblock.replace(/\n+$/g, ''); // trim trailing whitespace
 
-    codeblock = '<pre><code' + (language ? ' class="' + language + '"' : '') + '>' + codeblock + end + '</code></pre>';
+    codeblock = '<pre><code' + (language ? ' class="' + language + ' language-' + language + '"' : '') + '>' + codeblock + end + '</code></pre>';
 
     return showdown.subParser('hashBlock')(codeblock, options, globals);
   });
@@ -966,8 +1557,9 @@ showdown.subParser('githubCodeBlocks', function (text, options, globals) {
   // attacklab: strip sentinel
   text = text.replace(/~0/, '');
 
-  return text;
+  text = globals.converter._dispatch('githubCodeBlocks.after', text, options);
 
+  return text;
 });
 
 showdown.subParser('hashBlock', function (text, options, globals) {
@@ -1130,10 +1722,40 @@ showdown.subParser('hashHTMLBlocks', function (text, options, globals) {
 
 });
 
+/**
+ * Hash span elements that should not be parsed as markdown
+ */
+showdown.subParser('hashHTMLSpans', function (text, config, globals) {
+  'use strict';
+
+  var matches = showdown.helper.matchRecursiveRegExp(text, '<code\\b[^>]*>', '</code>', 'gi');
+
+  for (var i = 0; i < matches.length; ++i) {
+    text = text.replace(matches[i][0], '~L' + (globals.gHtmlSpans.push(matches[i][0]) - 1) + 'L');
+  }
+  return text;
+});
+
+/**
+ * Unhash HTML spans
+ */
+showdown.subParser('unhashHTMLSpans', function (text, config, globals) {
+  'use strict';
+
+  for (var i = 0; i < globals.gHtmlSpans.length; ++i) {
+    text = text.replace('~L' + i + 'L', globals.gHtmlSpans[i]);
+  }
+
+  return text;
+});
+
 showdown.subParser('headers', function (text, options, globals) {
   'use strict';
 
-  var prefixHeader = options.prefixHeaderId;
+  text = globals.converter._dispatch('headers.before', text, options);
+
+  var prefixHeader = options.prefixHeaderId,
+      headerLevelStart = (isNaN(parseInt(options.headerLevelStart))) ? 1 : parseInt(options.headerLevelStart),
 
   // Set text-style headers:
   //	Header 1
@@ -1142,15 +1764,23 @@ showdown.subParser('headers', function (text, options, globals) {
   //	Header 2
   //	--------
   //
-  text = text.replace(/^(.+)[ \t]*\n=+[ \t]*\n+/gm, function (wholeMatch, m1) {
+      setextRegexH1 = (options.smoothLivePreview) ? /^(.+)[ \t]*\n={2,}[ \t]*\n+/gm : /^(.+)[ \t]*\n=+[ \t]*\n+/gm,
+      setextRegexH2 = (options.smoothLivePreview) ? /^(.+)[ \t]*\n-{2,}[ \t]*\n+/gm : /^(.+)[ \t]*\n-+[ \t]*\n+/gm;
+
+  text = text.replace(setextRegexH1, function (wholeMatch, m1) {
+
     var spanGamut = showdown.subParser('spanGamut')(m1, options, globals),
-        hashBlock = '<h1 id="' + headerId(m1) + '">' + spanGamut + '</h1>';
+        hID = (options.noHeaderId) ? '' : ' id="' + headerId(m1) + '"',
+        hLevel = headerLevelStart,
+        hashBlock = '<h' + hLevel + hID + '>' + spanGamut + '</h' + hLevel + '>';
     return showdown.subParser('hashBlock')(hashBlock, options, globals);
   });
 
-  text = text.replace(/^(.+)[ \t]*\n-+[ \t]*\n+/gm, function (matchFound, m1) {
+  text = text.replace(setextRegexH2, function (matchFound, m1) {
     var spanGamut = showdown.subParser('spanGamut')(m1, options, globals),
-        hashBlock = '<h2 id="' + headerId(m1) + '">' + spanGamut + '</h2>';
+        hID = (options.noHeaderId) ? '' : ' id="' + headerId(m1) + '"',
+        hLevel = headerLevelStart + 1,
+      hashBlock = '<h' + hLevel + hID + '>' + spanGamut + '</h' + hLevel + '>';
     return showdown.subParser('hashBlock')(hashBlock, options, globals);
   });
 
@@ -1161,21 +1791,11 @@ showdown.subParser('headers', function (text, options, globals) {
   //  ...
   //  ###### Header 6
   //
-
-  /*
-   text = text.replace(/
-   ^(\#{1,6})				// $1 = string of #'s
-   [ \t]*
-   (.+?)					// $2 = Header text
-   [ \t]*
-   \#*						// optional closing #'s (not counted)
-   \n+
-   /gm, function() {...});
-   */
-
-  text = text.replace(/^(\#{1,6})[ \t]*(.+?)[ \t]*\#*\n+/gm, function (wholeMatch, m1, m2) {
+  text = text.replace(/^(#{1,6})[ \t]*(.+?)[ \t]*#*\n+/gm, function (wholeMatch, m1, m2) {
     var span = showdown.subParser('spanGamut')(m2, options, globals),
-        header = '<h' + m1.length + ' id="' + headerId(m2) + '">' + span + '</h' + m1.length + '>';
+        hID = (options.noHeaderId) ? '' : ' id="' + headerId(m2) + '"',
+        hLevel = headerLevelStart - 1 + m1.length,
+        header = '<h' + hLevel + hID + '>' + span + '</h' + hLevel + '>';
 
     return showdown.subParser('hashBlock')(header, options, globals);
   });
@@ -1201,6 +1821,7 @@ showdown.subParser('headers', function (text, options, globals) {
     return title;
   }
 
+  text = globals.converter._dispatch('headers.after', text, options);
   return text;
 });
 
@@ -1210,15 +1831,18 @@ showdown.subParser('headers', function (text, options, globals) {
 showdown.subParser('images', function (text, options, globals) {
   'use strict';
 
-  var writeImageTag = function (wholeMatch, m1, m2, m3, m4, m5, m6, m7) {
+  text = globals.converter._dispatch('images.before', text, options);
 
-    wholeMatch = m1;
-    var altText = m2,
-        linkId = m3.toLowerCase(),
-        url = m4,
-        title = m7,
-        gUrls = globals.gUrls,
-        gTitles = globals.gTitles;
+  var inlineRegExp    = /!\[(.*?)]\s?\([ \t]*()<?(\S+?)>?(?: =([*\d]+[A-Za-z%]{0,4})x([*\d]+[A-Za-z%]{0,4}))?[ \t]*(?:(['"])(.*?)\6[ \t]*)?\)/g,
+      referenceRegExp = /!\[(.*?)][ ]?(?:\n[ ]*)?\[(.*?)]()()()()()/g;
+
+  function writeImageTag (wholeMatch, altText, linkId, url, width, height, m5, title) {
+
+    var gUrls   = globals.gUrls,
+        gTitles = globals.gTitles,
+        gDims   = globals.gDimensions;
+
+    linkId = linkId.toLowerCase();
 
     if (!title) {
       title = '';
@@ -1231,10 +1855,14 @@ showdown.subParser('images', function (text, options, globals) {
       }
       url = '#' + linkId;
 
-      if (typeof gUrls[linkId] !== 'undefined') {
+      if (!showdown.helper.isUndefined(gUrls[linkId])) {
         url = gUrls[linkId];
-        if (typeof gTitles[linkId] !== 'undefined') {
+        if (!showdown.helper.isUndefined(gTitles[linkId])) {
           title = gTitles[linkId];
+        }
+        if (!showdown.helper.isUndefined(gDims[linkId])) {
+          width = gDims[linkId].width;
+          height = gDims[linkId].height;
         }
       } else {
         return wholeMatch;
@@ -1242,90 +1870,60 @@ showdown.subParser('images', function (text, options, globals) {
     }
 
     altText = altText.replace(/"/g, '&quot;');
+    altText = showdown.helper.escapeCharacters(altText, '*_', false);
     url = showdown.helper.escapeCharacters(url, '*_', false);
     var result = '<img src="' + url + '" alt="' + altText + '"';
 
-    // attacklab: Markdown.pl adds empty title attributes to images.
-    // Replicate this bug.
+    if (title) {
+      title = title.replace(/"/g, '&quot;');
+      title = showdown.helper.escapeCharacters(title, '*_', false);
+      result += ' title="' + title + '"';
+    }
 
-    //if (title != "") {
-    title = title.replace(/"/g, '&quot;');
-    title = showdown.helper.escapeCharacters(title, '*_', false);
-    result += ' title="' + title + '"';
-    //}
+    if (width && height) {
+      width  = (width === '*') ? 'auto' : width;
+      height = (height === '*') ? 'auto' : height;
+
+      result += ' width="' + width + '"';
+      result += ' height="' + height + '"';
+    }
 
     result += ' />';
 
     return result;
-  };
+  }
 
   // First, handle reference-style labeled images: ![alt text][id]
-  /*
-   text = text.replace(/
-   (						// wrap whole match in $1
-   !\[
-   (.*?)				// alt text = $2
-   \]
+  text = text.replace(referenceRegExp, writeImageTag);
 
-   [ ]?				// one optional space
-   (?:\n[ ]*)?			// one optional newline followed by spaces
+  // Next, handle inline images:  ![alt text](url =<width>x<height> "optional title")
+  text = text.replace(inlineRegExp, writeImageTag);
 
-   \[
-   (.*?)				// id = $3
-   \]
-   )()()()()				// pad rest of backreferences
-   /g,writeImageTag);
-   */
-  text = text.replace(/(!\[(.*?)\][ ]?(?:\n[ ]*)?\[(.*?)\])()()()()/g, writeImageTag);
-
-  // Next, handle inline images:  ![alt text](url "optional title")
-  // Don't forget: encode * and _
-  /*
-   text = text.replace(/
-   (						// wrap whole match in $1
-   !\[
-   (.*?)				// alt text = $2
-   \]
-   \s?					// One optional whitespace character
-   \(					// literal paren
-   [ \t]*
-   ()					// no id, so leave $3 empty
-   <?(\S+?)>?			// src url = $4
-   [ \t]*
-   (					// $5
-   (['"])			// quote char = $6
-   (.*?)			// title = $7
-   \6				// matching quote
-   [ \t]*
-   )?					// title is optional
-   \)
-   )
-   /g,writeImageTag);
-   */
-  text = text.replace(/(!\[(.*?)\]\s?\([ \t]*()<?(\S+?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g, writeImageTag);
-
+  text = globals.converter._dispatch('images.after', text, options);
   return text;
 });
 
-showdown.subParser('italicsAndBold', function (text) {
-  'use strict';
-  // <strong> must go first:
-  text = text.replace(/(\*\*|__)(?=\S)([^\r]*?\S[*_]*)\1/g, '<strong>$2</strong>');
-
-  text = text.replace(/(\*|_)(?=\S)([^\r]*?\S)\1/g, '<em>$2</em>');
-
-  return text;
-});
-
-/**
- * Run language extensions
- */
-showdown.subParser('languageExtensions', function (text, config, globals) {
+showdown.subParser('italicsAndBold', function (text, options, globals) {
   'use strict';
 
-  showdown.helper.forEach(globals.langExtensions, function (ext) {
-    text = showdown.subParser('runExtension')(ext, text);
-  });
+  text = globals.converter._dispatch('italicsAndBold.before', text, options);
+
+  if (options.literalMidWordUnderscores) {
+    //underscores
+    // Since we are consuming a \s character, we need to add it
+    text = text.replace(/(^|\s|>|\b)__(?=\S)([^]+?)__(?=\b|<|\s|$)/gm, '$1<strong>$2</strong>');
+    text = text.replace(/(^|\s|>|\b)_(?=\S)([^]+?)_(?=\b|<|\s|$)/gm, '$1<em>$2</em>');
+    //asterisks
+    text = text.replace(/(\*\*)(?=\S)([^\r]*?\S[*]*)\1/g, '<strong>$2</strong>');
+    text = text.replace(/(\*)(?=\S)([^\r]*?\S)\1/g, '<em>$2</em>');
+
+  } else {
+    // <strong> must go first:
+    text = text.replace(/(\*\*|__)(?=\S)([^\r]*?\S[*_]*)\1/g, '<strong>$2</strong>');
+    text = text.replace(/(\*|_)(?=\S)([^\r]*?\S)\1/g, '<em>$2</em>');
+  }
+
+  text = globals.converter._dispatch('italicsAndBold.after', text, options);
   return text;
 });
 
@@ -1335,13 +1933,15 @@ showdown.subParser('languageExtensions', function (text, config, globals) {
 showdown.subParser('lists', function (text, options, globals) {
   'use strict';
 
+  text = globals.converter._dispatch('lists.before', text, options);
   /**
    * Process the contents of a single ordered or unordered list, splitting it
    * into individual list items.
    * @param {string} listStr
-   * @returns {string|*}
+   * @param {boolean} trimTrailing
+   * @returns {string}
    */
-  var processListItems = function (listStr) {
+  function processListItems (listStr, trimTrailing) {
     // The $g_list_level global keeps track of when we're inside a list.
     // Each time we enter a list, we increment it; when we leave a list,
     // we decrement. If it's zero, we're not in a list anymore.
@@ -1362,7 +1962,6 @@ showdown.subParser('lists', function (text, options, globals) {
     // without resorting to mind-reading. Perhaps the solution is to
     // change the syntax rules such that sub-lists must start with a
     // starting cardinal number; e.g. "1." or "a.".
-
     globals.gListLevel++;
 
     // trim trailing blank lines:
@@ -1371,106 +1970,125 @@ showdown.subParser('lists', function (text, options, globals) {
     // attacklab: add sentinel to emulate \z
     listStr += '~0';
 
-    /*
-     list_str = list_str.replace(/
-     (\n)?							// leading line = $1
-     (^[ \t]*)						// leading whitespace = $2
-     ([*+-]|\d+[.]) [ \t]+			// list marker = $3
-     ([^\r]+?						// list item text   = $4
-     (\n{1,2}))
-     (?= \n* (~0 | \2 ([*+-]|\d+[.]) [ \t]+))
-     /gm, function(){...});
-     */
-    listStr = listStr.replace(/(\n)?(^[ \t]*)([*+-]|\d+[.])[ \t]+([^\r]+?(\n{1,2}))(?=\n*(~0|\2([*+-]|\d+[.])[ \t]+))/gm,
-                              function (wholeMatch, m1, m2, m3, m4) {
-                                var item = showdown.subParser('outdent')(m4, options, globals);
-                                //m1 - LeadingLine
+    var rgx = /(\n)?(^[ \t]*)([*+-]|\d+[.])[ \t]+((\[(x| )?])?[ \t]*[^\r]+?(\n{1,2}))(?=\n*(~0|\2([*+-]|\d+[.])[ \t]+))/gm,
+        isParagraphed = (/\n[ \t]*\n(?!~0)/.test(listStr));
 
-                                if (m1 || (item.search(/\n{2,}/) > -1)) {
-                                  item = showdown.subParser('blockGamut')(item, options, globals);
-                                } else {
-                                  // Recursion for sub-lists:
-                                  item = showdown.subParser('lists')(item, options, globals);
-                                  item = item.replace(/\n$/, ''); // chomp(item)
-                                  item = showdown.subParser('spanGamut')(item, options, globals);
-                                }
+    listStr = listStr.replace(rgx, function (wholeMatch, m1, m2, m3, m4, taskbtn, checked) {
+      checked = (checked && checked.trim() !== '');
+      var item = showdown.subParser('outdent')(m4, options, globals),
+          bulletStyle = '';
 
-                                return '<li>' + item + '</li>\n';
-                              });
+      // Support for github tasklists
+      if (taskbtn && options.tasklists) {
+        bulletStyle = ' class="task-list-item" style="list-style-type: none;"';
+        item = item.replace(/^[ \t]*\[(x| )?]/m, function () {
+          var otp = '<input type="checkbox" disabled style="margin: 0px 0.35em 0.25em -1.6em; vertical-align: middle;"';
+          if (checked) {
+            otp += ' checked';
+          }
+          otp += '>';
+          return otp;
+        });
+      }
+      // m1 - Leading line or
+      // Has a double return (multi paragraph) or
+      // Has sublist
+      if (m1 || (item.search(/\n{2,}/) > -1)) {
+        item = showdown.subParser('githubCodeBlocks')(item, options, globals);
+        item = showdown.subParser('blockGamut')(item, options, globals);
+      } else {
+        // Recursion for sub-lists:
+        item = showdown.subParser('lists')(item, options, globals);
+        item = item.replace(/\n$/, ''); // chomp(item)
+        if (isParagraphed) {
+          item = showdown.subParser('paragraphs')(item, options, globals);
+        } else {
+          item = showdown.subParser('spanGamut')(item, options, globals);
+        }
+      }
+      item =  '\n<li' + bulletStyle + '>' + item + '</li>\n';
+      return item;
+    });
 
     // attacklab: strip sentinel
     listStr = listStr.replace(/~0/g, '');
 
     globals.gListLevel--;
+
+    if (trimTrailing) {
+      listStr = listStr.replace(/\s+$/, '');
+    }
+
     return listStr;
-  };
+  }
+
+  /**
+   * Check and parse consecutive lists (better fix for issue #142)
+   * @param {string} list
+   * @param {string} listType
+   * @param {boolean} trimTrailing
+   * @returns {string}
+   */
+  function parseConsecutiveLists(list, listType, trimTrailing) {
+    // check if we caught 2 or more consecutive lists by mistake
+    // we use the counterRgx, meaning if listType is UL we look for UL and vice versa
+    var counterRxg = (listType === 'ul') ? /^ {0,2}\d+\.[ \t]/gm : /^ {0,2}[*+-][ \t]/gm,
+      subLists = [],
+      result = '';
+
+    if (list.search(counterRxg) !== -1) {
+      (function parseCL(txt) {
+        var pos = txt.search(counterRxg);
+        if (pos !== -1) {
+          // slice
+          result += '\n\n<' + listType + '>' + processListItems(txt.slice(0, pos), !!trimTrailing) + '</' + listType + '>\n\n';
+
+          // invert counterType and listType
+          listType = (listType === 'ul') ? 'ol' : 'ul';
+          counterRxg = (listType === 'ul') ? /^ {0,2}\d+\.[ \t]/gm : /^ {0,2}[*+-][ \t]/gm;
+
+          //recurse
+          parseCL(txt.slice(pos));
+        } else {
+          result += '\n\n<' + listType + '>' + processListItems(txt, !!trimTrailing) + '</' + listType + '>\n\n';
+        }
+      })(list);
+      for (var i = 0; i < subLists.length; ++i) {
+
+      }
+    } else {
+      result = '\n\n<' + listType + '>' + processListItems(list, !!trimTrailing) + '</' + listType + '>\n\n';
+    }
+
+    return result;
+  }
 
   // attacklab: add sentinel to hack around khtml/safari bug:
   // http://bugs.webkit.org/show_bug.cgi?id=11231
   text += '~0';
 
-  // Re-usable pattern to match any entirel ul or ol list:
-
-  /*
-   var whole_list = /
-   (									// $1 = whole list
-   (								// $2
-   [ ]{0,3}					// attacklab: g_tab_width - 1
-   ([*+-]|\d+[.])				// $3 = first list item marker
-   [ \t]+
-   )
-   [^\r]+?
-   (								// $4
-   ~0							// sentinel for workaround; should be $
-   |
-   \n{2,}
-   (?=\S)
-   (?!							// Negative lookahead for another list item marker
-   [ \t]*
-   (?:[*+-]|\d+[.])[ \t]+
-   )
-   )
-   )/g
-   */
+  // Re-usable pattern to match any entire ul or ol list:
   var wholeList = /^(([ ]{0,3}([*+-]|\d+[.])[ \t]+)[^\r]+?(~0|\n{2,}(?=\S)(?![ \t]*(?:[*+-]|\d+[.])[ \t]+)))/gm;
 
   if (globals.gListLevel) {
-    text = text.replace(wholeList, function (wholeMatch, m1, m2) {
-      var list = m1,
-          listType = (m2.search(/[*+-]/g) > -1) ? 'ul' : 'ol';
-
-      // Turn double returns into triple returns, so that we can make a
-      // paragraph for the last item in a list, if necessary:
-      list = list.replace(/\n{2,}/g, '\n\n\n');
-
-      var result = processListItems(list);
-
-      // Trim any trailing whitespace, to put the closing `</$list_type>`
-      // up on the preceding line, to get it past the current stupid
-      // HTML block parser. This is a hack to work around the terrible
-      // hack that is the HTML block parser.
-      result = result.replace(/\s+$/, '');
-      result = '<' + listType + '>' + result + '</' + listType + '>\n';
-      return result;
+    text = text.replace(wholeList, function (wholeMatch, list, m2) {
+      var listType = (m2.search(/[*+-]/g) > -1) ? 'ul' : 'ol';
+      return parseConsecutiveLists(list, listType, true);
     });
   } else {
-    wholeList = /(\n\n|^\n?)(([ ]{0,3}([*+-]|\d+[.])[ \t]+)[^\r]+?(~0|\n{2,}(?=\S)(?![ \t]*(?:[*+-]|\d+[.])[ \t]+)))/g;
+    wholeList = /(\n\n|^\n?)(([ ]{0,3}([*+-]|\d+[.])[ \t]+)[^\r]+?(~0|\n{2,}(?=\S)(?![ \t]*(?:[*+-]|\d+[.])[ \t]+)))/gm;
+    //wholeList = /(\n\n|^\n?)( {0,3}([*+-]|\d+\.)[ \t]+[\s\S]+?)(?=(~0)|(\n\n(?!\t| {2,}| {0,3}([*+-]|\d+\.)[ \t])))/g;
+    text = text.replace(wholeList, function (wholeMatch, m1, list, m3) {
 
-    text = text.replace(wholeList, function (wholeMatch, m1, m2, m3) {
-
-      // Turn double returns into triple returns, so that we can make a
-      // paragraph for the last item in a list, if necessary:
-      var list = m2.replace(/\n{2,}/g, '\n\n\n'),
-          listType = (m3.search(/[*+-]/g) > -1) ? 'ul' : 'ol',
-          result = processListItems(list);
-
-      return m1 + '<' + listType + '>\n' + result + '</' + listType + '>\n';
+      var listType = (m3.search(/[*+-]/g) > -1) ? 'ul' : 'ol';
+      return parseConsecutiveLists(list, listType);
     });
   }
 
   // attacklab: strip sentinel
   text = text.replace(/~0/, '');
 
+  text = globals.converter._dispatch('lists.after', text, options);
   return text;
 });
 
@@ -1491,23 +2109,12 @@ showdown.subParser('outdent', function (text) {
 });
 
 /**
- * Run language extensions
- */
-showdown.subParser('outputModifiers', function (text, config, globals) {
-  'use strict';
-
-  showdown.helper.forEach(globals.outputModifiers, function (ext) {
-    text = showdown.subParser('runExtension')(ext, text);
-  });
-  return text;
-});
-
-/**
  *
  */
 showdown.subParser('paragraphs', function (text, options, globals) {
   'use strict';
 
+  text = globals.converter._dispatch('paragraphs.before', text, options);
   // Strip leading and trailing lines:
   text = text.replace(/^\n+/g, '');
   text = text.replace(/\n+$/g, '');
@@ -1541,21 +2148,29 @@ showdown.subParser('paragraphs', function (text, options, globals) {
     }
   }
 
+  text = globals.converter._dispatch('paragraphs.after', text, options);
   return grafsOut.join('\n\n');
 });
 
 /**
- * Run language extensions
+ * Run extension
  */
-showdown.subParser('runExtension', function (ext, text) {
+showdown.subParser('runExtension', function (ext, text, options, globals) {
   'use strict';
 
-  if (ext.regex) {
-    var re = new RegExp(ext.regex, 'g');
-    return text.replace(re, ext.replace);
-  } else if (ext.filter) {
-    return ext.filter(text);
+  if (ext.filter) {
+    text = ext.filter(text, globals.converter, options);
+
+  } else if (ext.regex) {
+    // TODO remove this when old extension loading mechanism is deprecated
+    var re = ext.regex;
+    if (!re instanceof RegExp) {
+      re = new RegExp(re, 'g');
+    }
+    text = text.replace(re, ext.replace);
   }
+
+  return text;
 });
 
 /**
@@ -1565,6 +2180,7 @@ showdown.subParser('runExtension', function (ext, text) {
 showdown.subParser('spanGamut', function (text, options, globals) {
   'use strict';
 
+  text = globals.converter._dispatch('spanGamut.before', text, options);
   text = showdown.subParser('codeSpans')(text, options, globals);
   text = showdown.subParser('escapeSpecialCharsWithinTagAttributes')(text, options, globals);
   text = showdown.subParser('encodeBackslashEscapes')(text, options, globals);
@@ -1580,12 +2196,25 @@ showdown.subParser('spanGamut', function (text, options, globals) {
   text = showdown.subParser('autoLinks')(text, options, globals);
   text = showdown.subParser('encodeAmpsAndAngles')(text, options, globals);
   text = showdown.subParser('italicsAndBold')(text, options, globals);
+  text = showdown.subParser('strikethrough')(text, options, globals);
 
   // Do hard breaks:
   text = text.replace(/  +\n/g, ' <br />\n');
 
+  text = globals.converter._dispatch('spanGamut.after', text, options);
   return text;
+});
 
+showdown.subParser('strikethrough', function (text, options, globals) {
+  'use strict';
+
+  if (options.strikethrough) {
+    text = globals.converter._dispatch('strikethrough.before', text, options);
+    text = text.replace(/(?:~T){2}([^~]+)(?:~T){2}/g, '<del>$1</del>');
+    text = globals.converter._dispatch('strikethrough.after', text, options);
+  }
+
+  return text;
 });
 
 /**
@@ -1627,29 +2256,202 @@ showdown.subParser('stripBlankLines', function (text) {
 showdown.subParser('stripLinkDefinitions', function (text, options, globals) {
   'use strict';
 
-  var regex = /^[ ]{0,3}\[(.+)]:[ \t]*\n?[ \t]*<?(\S+?)>?[ \t]*\n?[ \t]*(?:(\n*)["(](.+?)[")][ \t]*)?(?:\n+|(?=~0))/gm;
+  var regex = /^ {0,3}\[(.+)]:[ \t]*\n?[ \t]*<?(\S+?)>?(?: =([*\d]+[A-Za-z%]{0,4})x([*\d]+[A-Za-z%]{0,4}))?[ \t]*\n?[ \t]*(?:(\n*)["|'(](.+?)["|')][ \t]*)?(?:\n+|(?=~0))/gm;
 
   // attacklab: sentinel workarounds for lack of \A and \Z, safari\khtml bug
   text += '~0';
 
-  text = text.replace(regex, function (wholeMatch, m1, m2, m3, m4) {
-    m1 = m1.toLowerCase();
-    globals.gUrls[m1] = showdown.subParser('encodeAmpsAndAngles')(m2);  // Link IDs are case-insensitive
-    if (m3) {
+  text = text.replace(regex, function (wholeMatch, linkId, url, width, height, blankLines, title) {
+    linkId = linkId.toLowerCase();
+    globals.gUrls[linkId] = showdown.subParser('encodeAmpsAndAngles')(url);  // Link IDs are case-insensitive
+
+    if (blankLines) {
       // Oops, found blank lines, so it's not a title.
       // Put back the parenthetical statement we stole.
-      return m3 + m4;
+      return blankLines + title;
 
-    } else if (m4) {
-      globals.gTitles[m1] = m4.replace(/"/g, '&quot;');
+    } else {
+      if (title) {
+        globals.gTitles[linkId] = title.replace(/"|'/g, '&quot;');
+      }
+      if (options.parseImgDimensions && width && height) {
+        globals.gDimensions[linkId] = {
+          width:  width,
+          height: height
+        };
+      }
     }
-
     // Completely remove the definition from the text
     return '';
   });
 
   // attacklab: strip sentinel
   text = text.replace(/~0/, '');
+
+  return text;
+});
+
+showdown.subParser('tables', function (text, options, globals) {
+  'use strict';
+
+  var table = function () {
+
+    var tables = {},
+        filter;
+
+    tables.th = function (header, style) {
+      var id = '';
+      header = header.trim();
+      if (header === '') {
+        return '';
+      }
+      if (options.tableHeaderId) {
+        id = ' id="' + header.replace(/ /g, '_').toLowerCase() + '"';
+      }
+      header = showdown.subParser('spanGamut')(header, options, globals);
+      if (!style || style.trim() === '') {
+        style = '';
+      } else {
+        style = ' style="' + style + '"';
+      }
+      return '<th' + id + style + '>' + header + '</th>';
+    };
+
+    tables.td = function (cell, style) {
+      var subText = showdown.subParser('spanGamut')(cell.trim(), options, globals);
+      if (!style || style.trim() === '') {
+        style = '';
+      } else {
+        style = ' style="' + style + '"';
+      }
+      return '<td' + style + '>' + subText + '</td>';
+    };
+
+    tables.ths = function () {
+      var out = '',
+          i = 0,
+          hs = [].slice.apply(arguments[0]),
+          style = [].slice.apply(arguments[1]);
+
+      for (i; i < hs.length; i += 1) {
+        out += tables.th(hs[i], style[i]) + '\n';
+      }
+
+      return out;
+    };
+
+    tables.tds = function () {
+      var out = '',
+          i = 0,
+          ds = [].slice.apply(arguments[0]),
+          style = [].slice.apply(arguments[1]);
+
+      for (i; i < ds.length; i += 1) {
+        out += tables.td(ds[i], style[i]) + '\n';
+      }
+      return out;
+    };
+
+    tables.thead = function () {
+      var out,
+          hs = [].slice.apply(arguments[0]),
+          style = [].slice.apply(arguments[1]);
+
+      out = '<thead>\n';
+      out += '<tr>\n';
+      out += tables.ths.apply(this, [hs, style]);
+      out += '</tr>\n';
+      out += '</thead>\n';
+      return out;
+    };
+
+    tables.tr = function () {
+      var out,
+        cs = [].slice.apply(arguments[0]),
+        style = [].slice.apply(arguments[1]);
+
+      out = '<tr>\n';
+      out += tables.tds.apply(this, [cs, style]);
+      out += '</tr>\n';
+      return out;
+    };
+
+    filter = function (text) {
+      var i = 0,
+        lines = text.split('\n'),
+        line,
+        hs,
+        out = [];
+
+      for (i; i < lines.length; i += 1) {
+        line = lines[i];
+        // looks like a table heading
+        if (line.trim().match(/^[|].*[|]$/)) {
+          line = line.trim();
+
+          var tbl = [],
+              align = lines[i + 1].trim(),
+              styles = [],
+              j = 0;
+
+          if (align.match(/^[|][-=|: ]+[|]$/)) {
+            styles = align.substring(1, align.length - 1).split('|');
+            for (j = 0; j < styles.length; ++j) {
+              styles[j] = styles[j].trim();
+              if (styles[j].match(/^[:][-=| ]+[:]$/)) {
+                styles[j] = 'text-align:center;';
+
+              } else if (styles[j].match(/^[-=| ]+[:]$/)) {
+                styles[j] = 'text-align:right;';
+
+              } else if (styles[j].match(/^[:][-=| ]+$/)) {
+                styles[j] = 'text-align:left;';
+              } else {
+                styles[j] = '';
+              }
+            }
+          }
+          tbl.push('<table>');
+          hs = line.substring(1, line.length - 1).split('|');
+
+          if (styles.length === 0) {
+            for (j = 0; j < hs.length; ++j) {
+              styles.push('text-align:left');
+            }
+          }
+          tbl.push(tables.thead.apply(this, [hs, styles]));
+          line = lines[++i];
+          if (!line.trim().match(/^[|][-=|: ]+[|]$/)) {
+            // not a table rolling back
+            line = lines[--i];
+          } else {
+            line = lines[++i];
+            tbl.push('<tbody>');
+            while (line.trim().match(/^[|].*[|]$/)) {
+              line = line.trim();
+              tbl.push(tables.tr.apply(this, [line.substring(1, line.length - 1).split('|'), styles]));
+              line = lines[++i];
+            }
+            tbl.push('</tbody>');
+            tbl.push('</table>');
+            // we are done with this table and we move along
+            out.push(tbl.join('\n'));
+            continue;
+          }
+        }
+        out.push(line);
+      }
+      return out.join('\n');
+    };
+    return {parse: filter};
+  };
+
+  if (options.tables) {
+    text = globals.converter._dispatch('tables.before', text, options);
+    var tableParser = table();
+    text = tableParser.parse(text);
+    text = globals.converter._dispatch('tables.after', text, options);
+  }
 
   return text;
 });
@@ -1685,4 +2487,5 @@ if (typeof module !== 'undefined' && module.exports) {
   root.showdown = showdown;
 }
 }).call(this);
+
 //# sourceMappingURL=showdown.js.map
