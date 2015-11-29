@@ -85,9 +85,14 @@ angular.module('starter.controllers', [])
     };
   })
 
-  .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog) {
+  .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog, $ionicLoading) {
+    $ionicLoading.show({
+      animation: 'fade-in',
+      template: 'Loading...'
+    });
     $scope.blog = {};
     Blog.async('https://www.phodal.com/api/app/blog_detail/?search_slug=' + $stateParams.slug).then(function (results) {
+      $ionicLoading.hide();
       $scope.blog = results[0];
       $scope.content = $scope.blog.content;
       $scope.htmlContent = $sce.trustAsHtml($scope.blog.content);
