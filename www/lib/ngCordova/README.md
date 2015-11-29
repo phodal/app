@@ -30,18 +30,18 @@ Install manually, or from bower:
 $ bower install ngCordova
 ```
 
-## Plugins `(64+)`
+## Plugins `(67+)`
 
 - [Action Sheet](https://github.com/EddyVerbruggen/cordova-plugin-actionsheet)
 - [AdMob](https://github.com/floatinghotpot/cordova-plugin-admob) (:warning: share % Ad revenue)
 - [App Availability](https://github.com/ohh2ahh/AppAvailability)
-- [App Preferences](https://github.com/dferrell/plugins-application-preferences)
 - [App Rate](https://github.com/pushandplay/cordova-plugin-apprate)
 - [App Version](https://github.com/whiteoctober/cordova-plugin-app-version)
 - [Background Geolocation](https://github.com/christocracy/cordova-plugin-background-geolocation)
 - [Badge](https://github.com/katzer/cordova-plugin-badge)
 - [Barcode Scanner](https://github.com/wildabeast/BarcodeScanner)
 - [Battery Status](https://github.com/apache/cordova-plugin-battery-status) *
+- [Beacon](https://github.com/petermetz/cordova-plugin-ibeacon)
 - [Bluetooth Low Energy](https://github.com/don/cordova-plugin-ble-central)
 - [Bluetooth Serial](https://github.com/don/BluetoothSerial)
 - [Brightness](https://github.com/fiscal-cliff/phonegap-plugin-brightness)
@@ -85,9 +85,11 @@ $ bower install ngCordova
 - [Network Information](https://github.com/apache/cordova-plugin-network-information) *
 - [Oauth](https://github.com/nraboy/ng-cordova-oauth)
 - [Pin Dialog](https://github.com/Paldom/PinDialog)
+- [Preferences](https://github.com/apla/me.apla.cordova.app-preferences)
 - [Printer](https://github.com/katzer/cordova-plugin-printer)
 - [Progress Indicator](https://github.com/pbernasconi/cordova-progressIndicator)
-- [Push Notifications](https://github.com/phonegap-build/PushPlugin)
+- [Push Notifications](https://github.com/phonegap-build/PushPlugin) (**deprecated** - Will be removed in future release)
+- [Push Notifications - V5] (https://github.com/phonegap/phonegap-plugin-push)
 - [SMS](https://github.com/aharris88/phonegap-sms-plugin)
 - [Social Sharing](https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin)
 - [Spinner Dialog](https://github.com/Paldom/SpinnerDialog)
