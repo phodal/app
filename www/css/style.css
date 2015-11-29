@@ -34,6 +34,12 @@
   color: #503d15;
 }
 
+
+@font-face {
+  font-family: InconsolataPower;
+  src: url("Inconsolata.otf") format("opentype");
+}
+
 pre code {
   display: block;
   background: white;
@@ -43,6 +49,9 @@ pre code {
   border: 1px solid #ccc;
   padding: 10px;
   font-size: 12px;
+}
+.markdown-body pre code {
+  font-family: InconsolataPower, Menlo, Monaco, Consolas, monospace;
 }
 pre .xml .tag .title {
   color: #111111;

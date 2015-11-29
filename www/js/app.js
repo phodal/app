@@ -26,7 +26,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter
   .config(['markedProvider', function (markedProvider) {
     marked.Lexer.rules.gfm.heading = marked.Lexer.rules.normal.heading;
     marked.Lexer.rules.tables.heading = marked.Lexer.rules.normal.heading;
-    
+
     markedProvider.setOptions({
       gfm: true,
       tables: true,
