@@ -86,7 +86,7 @@ angular.module('starter.controllers', [])
   })
 
   .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog, $ionicLoading, $localstorage, marked) {
-    $scope.imageSrc = "";
+    $scope.imageSrc = "img/world.jpg";
     $localstorage.set('image', $scope.imageSrc);
     $ionicLoading.show({
       animation: 'fade-in',

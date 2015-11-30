@@ -55,7 +55,7 @@ angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter
       },
       image: function (href) {
         var domain = 'https://www.phodal.com/';
-          if (!(href.indexOf(domain) > -1) && href.indexOf("http://") > -1 && href.indexOf("https://") > -1) {
+        if (!((href.indexOf(domain) > -1) || href.indexOf("http://") > -1 || href.indexOf("https://") > -1)) {
           href = domain + href;
         }
         localStorage.setItem('image', href);
