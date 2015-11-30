@@ -54,8 +54,8 @@ angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter
           '"><span class="header-link"></span></a>' +
           text + '</h' + level + '>';
       },
-      image: function(href, title) {
-        return "<img src='https://www.phodal.com/" + href + "'" + (title ? " title='" + title + "'" : '') /">";
+      image: function(href) {
+        return "<img src='https://www.phodal.com/" + href + "'" + "\/>";
       }
     });
   }])
