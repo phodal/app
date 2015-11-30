@@ -53,9 +53,13 @@ angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter
           '"><span class="header-link"></span></a>' +
           text + '</h' + level + '>';
       },
-      image: function(href) {
+      image: function (href) {
+        var domain = 'https://www.phodal.com/';
+          if (!(href.indexOf(domain) > -1) && href.indexOf("http://") > -1 && href.indexOf("https://") > -1) {
+          href = domain + href;
+        }
         localStorage.setItem('image', href);
-        return "<img src='https://www.phodal.com/" + href + "'" + "ng-click='openModal()'" + "/>";
+        return "<img src=" + href + ">";
       }
     });
   }])

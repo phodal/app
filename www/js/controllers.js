@@ -86,7 +86,8 @@ angular.module('starter.controllers', [])
   })
 
   .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog, $ionicLoading, $localstorage, marked) {
-    $localstorage.set('image', "");
+    $scope.imageSrc = "";
+    $localstorage.set('image', $scope.imageSrc);
     $ionicLoading.show({
       animation: 'fade-in',
       template: 'Loading...'
@@ -98,7 +99,9 @@ angular.module('starter.controllers', [])
       $scope.content = $scope.blog.content;
       $scope.htmlContent = $sce.trustAsHtml(marked($scope.blog.content));
 
-      console.log($localstorage.get('image'));
+      if($localstorage.get('image')){
+        $scope.imageSrc = $localstorage.get('image');
+      }
     });
   })
 
