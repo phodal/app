@@ -3,7 +3,7 @@ angular.module('starter.controllers', [])
   .controller('AppCtrl', function ($scope, $ionicModal, $http, $timeout, $cordovaToast, $localstorage) {
     $scope.loginData = {};
     $scope.noLogin = true;
-    if($localstorage.get('username')) {
+    if ($localstorage.get('username')) {
       $scope.loginData.username = $localstorage.get('username');
     }
 
@@ -76,16 +76,17 @@ angular.module('starter.controllers', [])
       $scope.blogs = results.objects;
     });
 
-    $scope.loadMore = function() {
+    $scope.loadMore = function () {
       $scope.blogOffset = $scope.blogOffset + 1;
-      Blog.async('https://www.phodal.com/api/v1/app/?limit=10&offset='+ $scope.blogOffset * 20 +  '&format=json').then(function (results) {
+      Blog.async('https://www.phodal.com/api/v1/app/?limit=10&offset=' + $scope.blogOffset * 20 + '&format=json').then(function (results) {
         Array.prototype.push.apply($scope.blogs, results.objects);
         $scope.$broadcast('scroll.infiniteScrollComplete');
       })
     };
   })
 
-  .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog, $ionicLoading) {
+  .controller('BlogDetailCtrl', function ($scope, $stateParams, $sanitize, $sce, Blog, $ionicLoading, $localstorage, marked) {
+    $localstorage.set('image', "");
     $ionicLoading.show({
       animation: 'fade-in',
       template: 'Loading...'
@@ -95,7 +96,9 @@ angular.module('starter.controllers', [])
       $ionicLoading.hide();
       $scope.blog = results[0];
       $scope.content = $scope.blog.content;
-      $scope.htmlContent = $sce.trustAsHtml($scope.blog.content);
+      $scope.htmlContent = $sce.trustAsHtml(marked($scope.blog.content));
+
+      console.log($localstorage.get('image'));
     });
   })
 

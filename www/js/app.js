@@ -46,7 +46,6 @@ angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter
     markedProvider.setRenderer({
       heading: function (text, level) {
         var escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
-
         return '<h' + level + '><a name="' +
           escapedText +
           '" class="anchor" href="#' +
@@ -55,7 +54,8 @@ angular.module('starter', ['ionic', 'ngCordova', 'starter.controllers', 'starter
           text + '</h' + level + '>';
       },
       image: function(href) {
-        return "<img src='https://www.phodal.com/" + href + "'" + "\/>";
+        localStorage.setItem('image', href);
+        return "<img src='https://www.phodal.com/" + href + "'" + "ng-click='openModal()'" + "/>";
       }
     });
   }])
